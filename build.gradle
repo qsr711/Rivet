@@ -1,0 +1,9 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'edu.emory.mathcs:JTransforms:2.4'
+}
