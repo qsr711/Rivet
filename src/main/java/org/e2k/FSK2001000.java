@@ -11,101 +11,13 @@
 // Rivet Copyright (C) 2011 Ian Wraith
 // This program comes with ABSOLUTELY NO WARRANTY
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FSK200/1000 Protocol Description
-// 
-// BLOCK 000
-// ---------
-// 
-// 00 000 SSSSSSSS These are the sync bytes always 
-// 01 008 SSSSSSSS 0x7d12b0e6
-// 02 016 SSSSSSSS
-// 03 024 SSSSSSSS
-// 
-// 04 032 CCCCCCCC The C bits make up the line number
-// 05 040 CCCXXXXX X bits are unknown but are always the same depending on the line number
-// 
-// 06 048 XXXXXXXX
-// 07 056 XXXXXXXX
-// 
-// 08 064 TTTTXXXX In block 0 the bits T show the number of blocks to follow
-// 09 072 XXXXXXXX
-// 10 080 TTTXXXXX 
-// 
-// 11 088 
-// 12 096 NNNNXXXX The N bits appear to contain the number of messages contained
-// 13 104
-// 14 112 
-// 15 120
-// 16 128 
-// 17 136
-// 18 144 
-// 19 152
-// 20 160 
-// 21 168
-// 22 176
-// 23 184
-// 24 192
-// 25 200
-// 26 208
-// 27 216
-// 28 224
-// 29 232
-// 30 240
-// 31 248
-// 32 256
-// 33 264
-// 34 272
-// 35 280
-// 
-// BLOCK 001
-// ---------
-// 
-// 00 000 SSSSSSSS These are the sync bytes always 
-// 01 008 SSSSSSSS 0x7d12b0e6
-// 02 016 SSSSSSSS
-// 03 024 SSSSSSSS
-// 04 032 CCCCCCCC The C bits make up the line number
-// 05 040 CCCXXXXX X bits are unknown but are always the same depending on the line number
-// 06 048 OOOOWWWW W bits have an unknown purpose
-// 07 056 BBBBEEEE
-// 08 064 OOOOWWWW 
-// 09 072 BBBBEEEE B bits appear to be a group count ?
-// 10 080 OOOOWWWW  
-// 11 088 XXXXXXXX
-// 12 096 OOOOWWWW O bits appear to usually be 0x1be9 = 07145 but in 0x00 specials can be 0x1bc0 = 07109 : Possible message type
-// 13 104 XXXXEEEE
-// 14 112 IIIIDDDD 
-// 15 120 GGGGHHHH
-// 16 128 IIIIDDDD The bits D are the message date
-// 17 136 GGGGHHHH
-// 18 144 IIIINNNN The bits N are the message number
-// 19 152 GGGGHHHH
-// 20 160 IIIINNNN The bits I appear to be the link identifier
-// 21 168 GGGGHHHH
-// 22 176 JJJJKKKK
-// 23 184 LLLLMMMM
-// 24 192 JJJJKKKK
-// 25 200 LLLLMMMM
-// 26 208 JJJJKKKK
-// 27 216 LLLLMMMM
-// 28 224 JJJJKKKK
-// 29 232 LLLLMMMM
-// 30 240 UUUUVVVV
-// 31 248 PPPPTTTT
-// 32 256 UUUUVVVV
-// 33 264 PPPPTTTT
-// 34 272 UUUUVVVV
-// 35 280 PPPPTTTT
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 package org.e2k;
 
 import java.awt.Color;
 import javax.swing.JOptionPane;
 
 public class FSK2001000 extends FSK {
-	
+
 	private int baudRate=200;
 	private int state=0;
 	private double samplesPerSymbol;
@@ -125,13 +37,15 @@ public class FSK2001000 extends FSK {
 	private int missingBlockCount=0;
 	private int bitsSinceLastBlockHeader=0;
 	private int messageTotalBlockCount=0;
-	
+	private CRC crcCalculator;
+
 	public FSK2001000 (Rivet tapp,int baud)	{
 		baudRate=baud;
 		theApp=tapp;
 		circularBitSet.setTotalLength(288);
+		crcCalculator = new CRC(16, 0x1021, 0xffff, 0xffff, true, true);
 	}
-	
+
 	public void setBaudRate(int baudRate) {
 		this.baudRate=baudRate;
 	}
@@ -150,7 +64,7 @@ public class FSK2001000 extends FSK {
 	public int getState() {
 		return state;
 	}
-		
+
 	public boolean decode (CircularDataBuffer circBuf,WaveData waveData)	{
 		// Just starting
 		if (state==0)	{
@@ -184,7 +98,7 @@ public class FSK2001000 extends FSK {
 			lettersMode=true;
 			return true;
 		}
-		
+
 		// Hunt for the sync sequence
 		else if (state==1)	{
 			String dout;
@@ -198,7 +112,7 @@ public class FSK2001000 extends FSK {
 				bitsSinceLastBlockHeader=0;
 			}
 		}
-		
+
 		// Main message decode section
 		else if (state==2)	{
 			// Only do this at the start of each symbol
@@ -214,8 +128,8 @@ public class FSK2001000 extends FSK {
 				if (difSync<2) processBlock();
 				// If there have been more than 2880 bits with a header (i.e 10 blocks) we have a serious problem
 				if (bitsSinceLastBlockHeader>2880) setState(1);
-			}		
-		}	
+			}
+		}
 		// Debug only
 		else if (state==3)	{
 			if (symbolCounter>=samplesPerSymbol)	{
@@ -233,9 +147,9 @@ public class FSK2001000 extends FSK {
 		}
 		sampleCount++;
 		symbolCounter++;
-		return true;			
+		return true;
 	}
-	
+
 	// Look for a sequence of 4 alternating tones with 1000 Hz difference
 	private String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
 		int difference;
@@ -274,7 +188,7 @@ public class FSK2001000 extends FSK {
 		if (theApp.isDebug()==true)	line=line+" (lowBin="+Integer.toString(lowBin)+" highBin="+Integer.toString(highBin)+")";
 		return line;
 	}
-	
+
 	// Find the frequency of a FSK200/1000 symbol
 	// Currently the program only supports a sampling rate of 8000 KHz
 	private int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
@@ -285,7 +199,7 @@ public class FSK2001000 extends FSK {
 		}
 		return -1;
 	}
-	
+
 	// The "normal" way of determining the frequency of a FSK200/1000 symbol
 	// is to do two FFTs of the first and last halves of the symbol
 	// that allows us to use the data for the early/late gate and to detect a half bit (which is used as a stop bit)
@@ -320,14 +234,14 @@ public class FSK2001000 extends FSK {
 		}
 		return out;
 	}
-	
+
 	// Add a comparator output to a circular buffer of values
 	private void addToAdjBuffer (double in)	{
 		adjBuffer[adjCounter]=in;
 		adjCounter++;
 		if (adjCounter==adjBuffer.length) adjCounter=0;
 	}
-	
+
 	// Return the average of the circular buffer
 	private double adjAverage()	{
 		int a;
@@ -337,7 +251,7 @@ public class FSK2001000 extends FSK {
 		}
 		return (total/adjBuffer.length);
 	}
-	
+
 	// Get the average value and return an adjustment value
 	private int adjAdjust()	{
 		double av=adjAverage();
@@ -345,13 +259,13 @@ public class FSK2001000 extends FSK {
 		if (av<0) r=0-r;
 		return (int)r;
 	}
-	
+
 	// Return a quality indicator
 	public String getQuailty()	{
 		String line="There were "+Integer.toString(blockCount)+" blocks in this message with " +Integer.toString(missingBlockCount)+" missing.";
 		return line;
 		}
-	
+
 	// Compare a String with the known FSK200/1000 block header
 	private int compareSync (String comp)	{
 		// Inverse sync 0x82ED4F19
@@ -373,55 +287,103 @@ public class FSK2001000 extends FSK {
 		}
 		return dif;
 	}
-	
+
 	// Process a FSK200/1000 block
-	private void processBlock()	{
-		String linesOut[]=new String[3];
-		boolean divider=false;
-		// Convert the block to an array of ints
-		int data[]=circularBitSet.returnInts();
-		// Data[4] and [5] contain the line number (bits 32 to 41)
-		int lineNos=(data[4]<<3)+((data[5]&224)>>5);
-		// Count the number of missing blocks
-		if (bitCount>288) missingBlockCount=missingBlockCount+(bitCount/288);
-		// Check if this is a divider block
-		if (checkDividerBlock(data)==true)	{
-			// Divide the messages with this //
-			linesOut[0]="----------------------------------------------------------";
-			divider=true;
+	private void processBlock() {
+		if (bitCount > 288) missingBlockCount = missingBlockCount + (bitCount / 288);
+		int[] frame = circularBitSet.returnInts();
+
+		// Check whether this block is the in-TX repeat divider.
+		if (checkDividerBlock(frame)) {
+			theApp.writeLine("----------------------------------------------------------", Color.BLUE, theApp.boldFont);
+			return;
 		}
-		else	{
-			// Display the block
-			linesOut[0]="Block No "+Integer.toString(lineNos);
-			// If block 0 display the special information
-			if (lineNos==0)	{
-				// Display the total number of blocks which is encoded into block 0 bits 64,65,66,67,80,81,82
-				messageTotalBlockCount=((data[8]&240)>>1)+((data[10]&224)>>5)+1;
-				linesOut[0]=linesOut[0]+" : Total Message Size "+Integer.toString(messageTotalBlockCount)+" blocks";
-				// Display the number of messages contained
-				int mcount=(data[12]&240)>>4;
-				if (mcount==1)	linesOut[0]=linesOut[0]+" : This transmission contains one message.";
-				else linesOut[0]=linesOut[0]+" : This transmission contains "+Integer.toString(mcount)+" messages.";
-			}
-			// If block 1 display the block 1 special information
-			else if (lineNos==1)	{
-				linesOut[0]=linesOut[0]+" "+extractAddressee(data)+" "+extractDate(data)+" "+extractMsgNumber(data)+extractMsgType(data)+extractGroupCount(data);
-				linesOut[2]=extractBlock1Mys(data);
-			}
-			
-			linesOut[1]=circularBitSet.extractBitSetasHex();
+
+		// First 11 bits after the sync sequence are the frame index.
+		int frameIndex = (frame[4] << 3) | ((frame[5] & 224) >> 5);
+
+		// Extract the 128 bits of data contained in the frame.
+		int[] data = new int[16];
+		data[0] = (frame[6] & 0xf0) | ((frame[8] >> 4) & 0x0f);
+		data[1] = (frame[10] & 0xf0) | ((frame[12] >> 4) & 0x0f);
+		data[2] = (frame[14] & 0xf0) | ((frame[16] >> 4) & 0x0f);
+		data[3] = (frame[18] & 0xf0) | ((frame[20] >> 4) & 0x0f);
+		data[4] = (frame[22] & 0xf0) | (frame[6] & 0x0f);
+		data[5] = ((frame[8] << 4) & 0xf0) | (frame[10] & 0x0f);
+		data[6] = ((frame[12] << 4) & 0xf0) | (frame[14] & 0x0f);
+		data[7] = ((frame[16] << 4) & 0xf0) | (frame[18] & 0x0f);
+		data[8] = ((frame[20] << 4) & 0xf0) | (frame[22] & 0x0f);
+		data[9] = (frame[7] & 0xf0) | ((frame[9] >> 4) & 0x0f);
+		data[10] = (frame[11] & 0xf0) | ((frame[13] >> 4) & 0x0f);
+		data[11] = (frame[15] & 0xf0) | ((frame[17] >> 4) & 0x0f);
+		data[12] = (frame[19] & 0xf0) | ((frame[21] >> 4) & 0x0f);
+		data[13] = (frame[23] & 0xf0) | (frame[7] & 0x0f);
+		data[14] = ((frame[9] << 4) & 0xf0) | (frame[11] & 0x0f);
+		data[15] = ((frame[13] << 4) & 0xf0) | (frame[15] & 0x0f);
+
+		// Extract the 16-bit CRC and verify it.
+		int crc = ((frame[17] << 12) & 0xffff) | ((frame[19] << 8) & 0xfff) | ((frame[21] << 4) & 0xff) | (frame[23] & 0xf);
+		boolean isValid = crc == crcCalculator.compute(data);
+
+		// Info frame, sent as frames #0, #16, #32, #48, ...
+		if (frameIndex % 16 == 0) {
+			int frameCount = (data[0] << 3) | (data[1] >> 5);
+			int messageCount = data[1] & 0x1f;
+			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s)", frameIndex, frameCount, messageCount), Color.BLUE, theApp.boldFont);
+			return;
 		}
+
+		// Extract the actual digits that are being sent.
+		int[] digits = new int[14];
+		digits[0] = (data[0] << 2) | (data[1] >> 6);
+		digits[1] = ((data[1] << 4) & 0x3ff) | (data[2] >> 4);
+		digits[2] = ((data[2] << 6) & 0x3ff) | (data[3] >> 2);
+		digits[3] = ((data[3] << 8) & 0x3ff) | data[4];
+		digits[4] = (data[5] << 2) | (data[6] >> 6);
+		digits[5] = ((data[6] << 4) & 0x3ff) | (data[7] >> 4);
+		digits[6] = ((data[7] << 6) & 0x3ff) | (data[8] >> 2);
+		digits[7] = ((data[8] << 8) & 0x3ff) | data[9];
+		digits[8] = (data[10] << 2) | (data[11] >> 6);
+		digits[9] = ((data[11] << 4) & 0x3ff) | (data[12] >> 4);
+		digits[10] = ((data[12] << 6) & 0x3ff) | (data[13] >> 2);
+		digits[11] = ((data[13] << 8) & 0x3ff) | data[14];
+		digits[12] = data[15] >> 4;
+		digits[13] = data[15] & 0x0f;
+
+		theApp.writeLine(String.format("[#%d] %03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%d%d | CRC %s", frameIndex, digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7], digits[8], digits[9], digits[10], digits[11], digits[12], digits[13], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
+
+		// else	{
+		// 	// Display the block
+		// 	linesOut[0]="Block No "+Integer.toString(lineNos);
+		// 	// If block 0 display the special information
+		// 	if (lineNos==0)	{
+		// 		// Display the total number of blocks which is encoded into block 0 bits 64,65,66,67,80,81,82
+		// 		messageTotalBlockCount=((data[8]&240)>>1)+((data[10]&224)>>5)+1;
+		// 		linesOut[0]=linesOut[0]+" : Total Message Size "+Integer.toString(messageTotalBlockCount)+" blocks";
+		// 		// Display the number of messages contained
+		// 		int mcount=(data[12]&240)>>4;
+		// 		if (mcount==1)	linesOut[0]=linesOut[0]+" : This transmission contains one message.";
+		// 		else linesOut[0]=linesOut[0]+" : This transmission contains "+Integer.toString(mcount)+" messages.";
+		// 	}
+		// 	// If block 1 display the block 1 special information
+		// 	else if (lineNos==1)	{
+		// 		linesOut[0]=linesOut[0]+" "+extractAddressee(data)+" "+extractDate(data)+" "+extractMsgNumber(data)+extractMsgType(data)+extractGroupCount(data);
+		// 		linesOut[2]=extractBlock1Mys(data);
+		// 	}
+
+		// 	linesOut[1]=circularBitSet.extractBitSetasHex();
+		// }
 		bitCount=0;
 		bitsSinceLastBlockHeader=0;
 		blockCount++;
-		// Display the decoded info
-		if (divider==false) theApp.writeLine(linesOut[0],Color.BLUE,theApp.boldFont);
-		else theApp.writeLine(linesOut[0],Color.RED,theApp.boldFont);
-		theApp.writeLine(linesOut[2],Color.BLUE,theApp.boldFont);
-		theApp.writeLine(linesOut[1],Color.BLACK,theApp.boldFont);
-		return;
+		// // Display the decoded info
+		// if (divider==false) theApp.writeLine(linesOut[0],Color.BLUE,theApp.boldFont);
+		// else theApp.writeLine(linesOut[0],Color.RED,theApp.boldFont);
+		// theApp.writeLine(linesOut[2],Color.BLUE,theApp.boldFont);
+		// theApp.writeLine(linesOut[1],Color.BLACK,theApp.boldFont);
+		// return;
 	}
-	
+
 	// Check if this is a divider block
 	private boolean checkDividerBlock(int da[])	{
 		int a,zeroCount=0;
@@ -431,182 +393,4 @@ public class FSK2001000 extends FSK {
 		if (zeroCount>=30) return true;
 		else return false;
 	}
-	
-	// Extract addressee
-	private String extractAddressee (int da[])	{
-		int a1=(da[14]&240)<<8;
-		int a2=(da[16]&240)<<4;
-		int a3=da[18]&240;
-		int a4=(da[20]&240)>>4;
-		int addr=a1+a2+a3+a4;
-		String r=" : Link ID "+String.format("%05d",addr);
-		return r;
-	}
-	
-	// Message Type
-	private String extractMsgType (int da[])	{
-		int a1=(da[6]&240)<<8;
-		int a2=(da[8]&240)<<4;
-		int a3=da[10]&240;
-		int a4=(da[12]&240)>>4;
-		int type=a1+a2+a3+a4;
-		String r=" : Msg Type "+String.format("%05d",type);
-		return r;
-	}
-	
-	// Extract message number
-	private String extractMsgNumber (int da[])	{
-		int num=((da[18]&15)<<4)+(da[20]&15);
-		String r=" : Msg Number "+String.format("%03d",num);
-		return r;
-	}
-	
-	// Extract the group count
-	private String extractGroupCount (int da[])	{
-		int gc=(da[7]&240)+((da[9]&240)>>4);
-		String r=" : Group Count (?) "+Integer.toString(gc);
-		return r;
-	}
-	
-	// Extract the mystery bits
-	private String extractBlock1Mys (int da[])	{
-		int a1,a2,a3,a4;
-		// W bits
-		// Low nibbles from bytes 6,8,10,12
-		a1=(da[6]&15)<<12;
-		a2=(da[8]&15)<<8;
-		a3=(da[10]&15)<<4;
-		a4=da[12]&15;
-		int w=a1+a2+a3+a4;
-		// E bits
-		// Low nibbles from bytes 7,9,11,13
-		a1=(da[7]&15)<<12;
-		a2=(da[9]&15)<<8;
-		a3=(da[11]&15)<<4;
-		a4=da[13]&15;
-		int e=a1+a2+a3+a4;
-		// G bits
-		// High nibbles from bytes 15,17,19,21
-		a1=(da[15]&240)<<8;
-		a2=(da[17]&240)<<4;
-		a3=da[19]&240;
-		a4=(da[21]&240)>>4;
-		int g=a1+a2+a3+a4;
-		// H bits
-		// Low nibbles from bytes 15,17,19,21
-		a1=(da[15]&15)<<12;
-		a2=(da[17]&15)<<8;
-		a3=(da[19]&15)<<4;
-		a4=da[21]&15;
-		int h=a1+a2+a3+a4;
-		// J bits
-		// High nibbles from bytes 22,24,26,28
-		a1=(da[22]&240)<<8;
-		a2=(da[24]&240)<<4;
-		a3=da[26]&240;
-		a4=(da[28]&240)>>4;
-		int j=a1+a2+a3+a4;
-		// K bits
-		// Low nibbles from bytes 22,24,26,28
-		a1=(da[22]&15)<<12;
-		a2=(da[24]&15)<<8;
-		a3=(da[26]&15)<<4;
-		a4=da[28]&15;
-		int k=a1+a2+a3+a4;
-		// L bits
-		// High nibbles from bytes 23,25,27,29
-		a1=(da[23]&240)<<8;
-		a2=(da[25]&240)<<4;
-		a3=da[27]&240;
-		a4=(da[29]&240)>>4;
-		int l=a1+a2+a3+a4;
-		// M bits
-		// Low nibbles from bytes 23,25,27,29
-		a1=(da[23]&15)<<12;
-		a2=(da[25]&15)<<8;
-		a3=(da[27]&15)<<4;
-		a4=da[29]&15;
-		int m=a1+a2+a3+a4;		
-		
-		// Display these
-		String r=String.format("%05d",w)+" "+String.format("%05d",e)+" "+String.format("%05d",g)+" "+String.format("%05d",h)+" "+String.format("%05d",j)+" "+String.format("%05d",k)+" "+String.format("%05d",l)+" "+String.format("%05d",m);
-		return r;
-	}
-	
-	// Extract and display the date as a string
-	private String extractDate (int d[])	{
-		int dval=extractDateNum(d);
-		if (dval==1) return " : 1st of month";
-		else if (dval==2) return " : 2nd of month";
-		else if (dval==3) return " : 3rd of month";
-		else if (dval==4) return " : 4th of month";
-		else if (dval==5) return " : 5th of month";
-		else if (dval==6) return " : 6th of month";
-		else if (dval==7) return " : 7th of month";
-		else if (dval==8) return " : 8th of month";
-		else if (dval==9) return " : 9th of month";
-		else if (dval==10) return " : 10th of month";
-		else if (dval==11) return " : 11th of month";
-		else if (dval==12) return " : 12th of month";
-		else if (dval==13) return " : 13th of month";
-		else if (dval==14) return " : 14th of month";
-		else if (dval==15) return " : 15th of month";
-		else if (dval==16) return " : 16th of month";
-		else if (dval==17) return " : 17th of month";
-		else if (dval==18) return " : 18th of month";
-		else if (dval==19) return " : 19th of month";
-		else if (dval==20) return " : 20th of month";
-		else if (dval==21) return " : 21st of month";
-		else if (dval==22) return " : 22nd of month";
-		else if (dval==23) return " : 23rd of month";
-		else if (dval==24) return " : 24th of month";
-		else if (dval==25) return " : 25th of month";
-		else if (dval==26) return " : 26th of month";
-		else if (dval==27) return " : 27th of month";
-		else if (dval==28) return " : 28th of month";
-		else if (dval==29) return " : 29th of month";
-		else if (dval==30) return " : 30th of month";
-		else if (dval==31) return " : 31st of month";
-		else return " : Corrupt Date";
-		
-	}
-	
-	// Extract the date as an int
-	private int extractDateNum (int da[])	{
-		int rval=((da[14]&15)<<4)+(da[16]&15);
-		if (rval==10) return 1;
-		else if (rval==20) return 2;
-		else if (rval==30) return 3;
-		else if (rval==40) return 4;
-		else if (rval==50) return 5;
-		else if (rval==60) return 6;
-		else if (rval==70) return 7;
-		else if (rval==80) return 8;
-		else if (rval==90) return 9;
-		else if (rval==100) return 10;
-		else if (rval==110) return 11;
-		else if (rval==120) return 12;
-		else if (rval==130) return 13;
-		else if (rval==140) return 14;
-		else if (rval==150) return 15;
-		else if (rval==160) return 16;
-		else if (rval==170) return 17;
-		else if (rval==180) return 18;
-		else if (rval==190) return 19;
-		else if (rval==200) return 20;
-		else if (rval==210) return 21;
-		else if (rval==220) return 22;
-		else if (rval==230) return 23;
-		else if (rval==240) return 24;
-		else if (rval==250) return 25;
-		else if (rval==4) return 26;
-		else if (rval==14) return 27;
-		else if (rval==24) return 28;
-		else if (rval==34) return 29;
-		else if (rval==44) return 30;
-		else if (rval==54) return 31;
-		else return 0;
-	}
-	
-	
 }
