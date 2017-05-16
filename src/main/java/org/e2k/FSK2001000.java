@@ -38,6 +38,7 @@ public class FSK2001000 extends FSK {
 	private int bitsSinceLastBlockHeader=0;
 	private int messageTotalBlockCount=0;
 	private CRC crcCalculator;
+	private int txType;
 
 	public FSK2001000 (Rivet tapp,int baud)	{
 		baudRate=baud;
@@ -96,6 +97,7 @@ public class FSK2001000 extends FSK {
 			// Clear the display side of things
 			characterCount=0;
 			lettersMode=true;
+			txType=0;
 			return true;
 		}
 
@@ -350,38 +352,27 @@ public class FSK2001000 extends FSK {
 		digits[12] = data[15] >> 4;
 		digits[13] = data[15] & 0x0f;
 
-		theApp.writeLine(String.format("[#%d] %03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%d%d | CRC %s", frameIndex, digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7], digits[8], digits[9], digits[10], digits[11], digits[12], digits[13], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
+		if (frameIndex == 1 && data[0] == 0x34 && data[1] == 0x36) {
+			// Check whether this is a pre-transmission test.
+			txType = 1;
+		} else if (frameIndex == 1 && data[0] == 0x00 && data[1] == 0x00) {
+			// Check whether this is F06a.
+			txType = 2;
+		} else if (frameIndex == 1 && data[0] == 0x1b) {
+			txType = 0;
+		}
 
-		// else	{
-		// 	// Display the block
-		// 	linesOut[0]="Block No "+Integer.toString(lineNos);
-		// 	// If block 0 display the special information
-		// 	if (lineNos==0)	{
-		// 		// Display the total number of blocks which is encoded into block 0 bits 64,65,66,67,80,81,82
-		// 		messageTotalBlockCount=((data[8]&240)>>1)+((data[10]&224)>>5)+1;
-		// 		linesOut[0]=linesOut[0]+" : Total Message Size "+Integer.toString(messageTotalBlockCount)+" blocks";
-		// 		// Display the number of messages contained
-		// 		int mcount=(data[12]&240)>>4;
-		// 		if (mcount==1)	linesOut[0]=linesOut[0]+" : This transmission contains one message.";
-		// 		else linesOut[0]=linesOut[0]+" : This transmission contains "+Integer.toString(mcount)+" messages.";
-		// 	}
-		// 	// If block 1 display the block 1 special information
-		// 	else if (lineNos==1)	{
-		// 		linesOut[0]=linesOut[0]+" "+extractAddressee(data)+" "+extractDate(data)+" "+extractMsgNumber(data)+extractMsgType(data)+extractGroupCount(data);
-		// 		linesOut[2]=extractBlock1Mys(data);
-		// 	}
+		if (txType == 0) {
+			theApp.writeLine(String.format("[#%d] %03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%d%d | CRC %s", frameIndex, digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7], digits[8], digits[9], digits[10], digits[11], digits[12], digits[13], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
+		} else if (txType == 1) {
+			theApp.writeLine(String.format("[#%d] %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
+		} else if (txType == 2) {
+			theApp.writeLine(String.format("[#%d] %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
+		}
 
-		// 	linesOut[1]=circularBitSet.extractBitSetasHex();
-		// }
 		bitCount=0;
 		bitsSinceLastBlockHeader=0;
 		blockCount++;
-		// // Display the decoded info
-		// if (divider==false) theApp.writeLine(linesOut[0],Color.BLUE,theApp.boldFont);
-		// else theApp.writeLine(linesOut[0],Color.RED,theApp.boldFont);
-		// theApp.writeLine(linesOut[2],Color.BLUE,theApp.boldFont);
-		// theApp.writeLine(linesOut[1],Color.BLACK,theApp.boldFont);
-		// return;
 	}
 
 	// Check if this is a divider block
