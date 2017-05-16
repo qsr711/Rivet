@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 
 public class XPA2 extends MFSK {
 	
-	private final double BAUDRATE=7.8;
+	private final double BAUDRATE=7.8125;
 	private int state=0;
 	private double samplesPerSymbol;
 	private Rivet theApp;
