@@ -9,7 +9,7 @@ http://www.udxf.nl/
 
 A binary version of this program which will run without being compiled is available from ..
 
-http://borg.shef.ac.uk/rivet/
+http://apul64.dsl.pipex.com/enigma2000/rivet/
 
 Currently the program decodes the modes ..
 
@@ -162,6 +162,8 @@ Build 89 Improve the decoded CROWD36 display and add a debug output
          Add 800 Hz shift support for RTTY and raw FSK
          Add 145 baud support for RTTY and raw FSK
          Add 150 baud support for RTTY and raw FSK
+Build 90 Rewrite the FSK200/1000 block parser to use the newest findings
+         Fix the XPA2 decoder being unreliable after a while
                 
 Reported Bugs
 -------------
@@ -169,9 +171,5 @@ Still problems with ..
 
 CWOWD36 - Lack a fundamental understanding of this mode. Suspect a unknown tone to alphabet map is in use.
 
-FSK200/1000 - Isn't fully decoded but the key externals now are.
-
 CIS36-50 - Messages are OK from stations that start transmitting idle briefly but Rivet has problems with 
-messages from stations which idle constantly.
-
-Ian Wraith (30th December 2013) 
+messages from stations which idle constantly.
