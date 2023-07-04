@@ -103,9 +103,9 @@ public class Rivet {
 			"XPA (20 Baud)",
 			"Experimental",
 			"CIS 36-50",
-			"FSK200/500",
+			"F01 (FSK200/500)",
 			"CCIR493-4",
-			"FSK200/1000",
+			"F06 (FSK200/1000)",
 			"GW FSK (100 Baud)",
 			"Baudot",
 			"FSK (Raw)"
