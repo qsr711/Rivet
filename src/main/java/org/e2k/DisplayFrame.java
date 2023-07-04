@@ -38,6 +38,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	private JMenuItem FSK2001000_item,CROWD36_sync_item,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
 	private JMenuItem freeChannelMarkerGW_item,RTTYOptions_item,FSK_item,AddEditTrigger_item,credits_item,system_info_item;
 	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item;
+	private JMenuItem priyom_item;
 	private List<JMenuItem> trigger_items=new ArrayList<JMenuItem>();
 	private JMenu audioDevicesMenu;
 	private static ArrayList<AudioMixer> devices;
@@ -161,7 +162,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		sample_item.addActionListener(this);
 		helpMenu.add(e2k_item=new JMenuItem("Enigma2000"));
 		e2k_item.addActionListener(this);
-		helpMenu.add(twitter_item=new JMenuItem("Follow Rivet Progress on Twitter"));		
+		helpMenu.add(twitter_item=new JMenuItem("Follow Rivet original author on Twitter"));		
 		twitter_item.addActionListener(this);
 		helpMenu.add(help_item=new JMenuItem("Help"));		
 		help_item.addActionListener(this);
@@ -169,6 +170,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		system_info_item.addActionListener(this);
 		helpMenu.add(UDXF_item=new JMenuItem("UDXF"));		
 		UDXF_item.addActionListener(this);
+		helpMenu.add(priyom_item=new JMenuItem("priyom.org"));
+		priyom_item.addActionListener(this);
 		menuBar.add(helpMenu);
 		// Add the vertical scroll bar
 		add(vscrollbar,BorderLayout.EAST);
@@ -252,11 +255,11 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		}
 		// Enigma2000
 		if (event_name=="Enigma2000")	{
-			BareBonesBrowserLaunch.openURL("http://www.enigma2000.org.uk/");
+			BareBonesBrowserLaunch.openURL("http://www.signalshed.com");
 		}
 		// UDXF
 		if (event_name=="UDXF")	{
-			BareBonesBrowserLaunch.openURL("http://www.udxf.nl/");
+			BareBonesBrowserLaunch.openURL("https://groups.io/g/UDXF");
 		}
 		// Help
 		if (event_name=="Help") {
@@ -264,11 +267,15 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		}
 		// Sound Samples
 		if (event_name=="Download the latest version of Rivet or sound sample files")	{
-			BareBonesBrowserLaunch.openURL("http://borg.shef.ac.uk/rivet");
+			BareBonesBrowserLaunch.openURL("http://www.signalshed.com/rivet/");
 		}
 		// Twitter
-		if (event_name=="Follow Rivet Progress on Twitter")	{
-			BareBonesBrowserLaunch.openURL("https://twitter.com/#!/IanWraith");
+		if (event_name=="Follow Rivet original author on Twitter")	{
+			BareBonesBrowserLaunch.openURL("https://twitter.com/IanWraith");
+		}
+		//priyom.org
+		if (event_name=="priyom.org"){
+			BareBonesBrowserLaunch.openURL("https://priyom.org/");
 		}
 		// Debug mode
 		if (event_name=="Debug Mode")	{
