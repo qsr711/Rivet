@@ -356,9 +356,12 @@ public class FSK2001000 extends FSK {
 		if (frameIndex == 1 && data[0] == 0x34 && data[1] == 0x36) {
 			// Check whether this is a pre-transmission test.
 			txType = 1;
-		} else if (frameIndex == 1 && data[0] == 0x00 && data[1] == 0x00) {
+		} else if ((frameIndex == 1 && data[0] == 0x00 && data[1] == 0x00) || (frameIndex > 1 && (frameIndex % 16 != 0) && isValid && checkF06aBlock(digits))) {
 			// Check whether this is F06a.
-			txType = 2;
+			theApp.writeLine(String.format("[INFO] F06a block detected. Switching to F06a decoding..."), Color.BLUE, theApp.boldFont);
+			theApp.setSystem(12);
+			theApp.setModeLabel(theApp.MODENAMES[12]);
+			txType=2;
 		} else if (frameIndex == 1 && data[0] == 0x1b) {
 			txType = 0;
 		}
@@ -367,8 +370,6 @@ public class FSK2001000 extends FSK {
 			theApp.writeLine(String.format("[#%d] %03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%d%d | CRC %s", frameIndex, digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7], digits[8], digits[9], digits[10], digits[11], digits[12], digits[13], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
 		} else if (txType == 1) {
 			theApp.writeLine(String.format("[#%d] %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
-		} else if (txType == 2) {
-			theApp.writeLine(String.format("[#%d] %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
 		}
 
 		bitCount=0;
@@ -384,5 +385,15 @@ public class FSK2001000 extends FSK {
 		}
 		if (zeroCount>=30) return true;
 		else return false;
+	}
+
+	//Check for invalid 10-bit and 8-bit digit values from valid CRC blocks
+	private boolean checkF06aBlock(int di[]) {
+		boolean invalidDigits=false;
+		for (int i=0;i<di.length;i++){
+			if (i<12 && di[i]>999) invalidDigits=true;
+			else if (i>11 && di[i]>9) invalidDigits=true;
+		}
+		return invalidDigits;
 	}
 }
