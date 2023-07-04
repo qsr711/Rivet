@@ -38,7 +38,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	private JMenuItem FSK2001000_item,CROWD36_sync_item,invert_item,save_settings_item,sample_item,e2k_item,twitter_item;
 	private JMenuItem freeChannelMarkerGW_item,RTTYOptions_item,FSK_item,AddEditTrigger_item,credits_item,system_info_item;
 	private JMenuItem ClearDisplay_item,DisplayBad_item,DisplayUTC_item,UDXF_item,CIS360Options_item;
-	private JMenuItem priyom_item;
+	private JMenuItem F06a_item, F06aEncoding_item, priyom_item;
 	private List<JMenuItem> trigger_items=new ArrayList<JMenuItem>();
 	private JMenu audioDevicesMenu;
 	private static ArrayList<AudioMixer> devices;
@@ -111,6 +111,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		FSK200500_item.addActionListener(this);
 		modeMenu.add(FSK2001000_item=new JRadioButtonMenuItem(theApp.MODENAMES[8],theApp.isFSK2001000()));
 		FSK2001000_item.addActionListener(this);
+		modeMenu.add(F06a_item=new JRadioButtonMenuItem(theApp.MODENAMES[12],theApp.isF06a()));
+		F06a_item.addActionListener(this);
 		modeMenu.add(FSK_item=new JRadioButtonMenuItem(theApp.MODENAMES[11],theApp.isFSK()));
 		FSK_item.addActionListener(this);	
 		modeMenu.add(GW_item=new JRadioButtonMenuItem(theApp.MODENAMES[9],theApp.isGW()));
@@ -137,6 +139,8 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		invert_item.addActionListener(this);
 		optionsMenu.add(CROWD36_sync_item=new JMenuItem("Set the CROWD36 Sync High Tone"));
 		CROWD36_sync_item.addActionListener(this);
+		optionsMenu.add(F06aEncoding_item=new JRadioButtonMenuItem("F06a ASCII parsing",theApp.isF06aASCII()));
+		F06aEncoding_item.addActionListener(this);
 		menuBar.add(optionsMenu);
 		// Triggers
 		updateTriggerMenuItems();
@@ -347,6 +351,11 @@ public class DisplayFrame extends JFrame implements ActionListener {
 			if (theApp.isInvertSignal()==true) theApp.setInvertSignal(false);
 			else theApp.setInvertSignal(true);
 		}
+		// Set F06a ASCII
+		if (event_name=="F06a ASCII parsing") {
+			if (theApp.isF06aASCII()) theApp.setF06aASCII(false);
+			else theApp.setF06aASCII(true);
+		}
 		// Save Settings
 		if (event_name=="Save the Current Settings")	{
 			theApp.saveSettings();
@@ -427,6 +436,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		FSK_item.setSelected(theApp.isFSK());
 		FSK200500_item.setSelected(theApp.isFSK200500());
 		FSK2001000_item.setSelected(theApp.isFSK2001000());
+		F06a_item.setSelected(theApp.isF06a());
 		debug_item.setSelected(theApp.isDebug());
 		soundcard_item.setSelected(theApp.isSoundCardInput());
 		invert_item.setSelected(theApp.isInvertSignal());
@@ -435,6 +445,7 @@ public class DisplayFrame extends JFrame implements ActionListener {
 		DisplayBad_item.setSelected(theApp.isDisplayBadPackets());
 		DisplayUTC_item.setSelected(theApp.isLogInUTC());
 		RTTY_item.setSelected(theApp.isRTTY());
+		F06aEncoding_item.setSelected(theApp.isF06aASCII());
 		// Triggers
 		List<Trigger> trigList=theApp.getListTriggers();
 		int a;
@@ -490,6 +501,11 @@ public class DisplayFrame extends JFrame implements ActionListener {
 	
 	public void setStatusLabel (String st)	{
 		statusBar.setStatusLabel(st);
+	}
+
+	public void setModeLabel(String st){
+		statusBar.setModeLabel(st);
+		menuItemUpdate();
 	}
 	
 	// Close the log file
