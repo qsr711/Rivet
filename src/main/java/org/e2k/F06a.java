@@ -35,6 +35,7 @@ public class F06a extends FSK {
 	private CircularBitSet circularBitSet=new CircularBitSet();
 	private int bitCount=0;
 	private int blockCount=0;
+	private int msgStartPos[]=new int[8];
 	private int missingBlockCount=0;
 	private int bitsSinceLastBlockHeader=0;
 	private int messageTotalBlockCount=0;
@@ -341,7 +342,11 @@ public class F06a extends FSK {
 		if (frameIndex % 16 == 0) {
 			int frameCount = (data[0] << 3) | (data[1] >> 5);
 			int messageCount = data[1] & 0x1f;
-			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s)", frameIndex, frameCount, messageCount), Color.BLUE, theApp.boldFont);
+			if (messageCount > 7) isValid = false; //There cannot be more than 7 messages in F06
+			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s) | CRC %s", frameIndex, frameCount, messageCount, isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
+			if (isValid){
+				theApp.writeLine(String.format("[INFO] %s", processMetadataBlock(data)), Color.BLUE, theApp.boldFont);
+			} 
 			return;
 		}
 
@@ -357,26 +362,29 @@ public class F06a extends FSK {
 		}
 
 		if (txType == 0) {
-            if (frameIndex == 1){
+			//Print header blocks
+            if (isHeaderBlock(frameIndex)){
 				theApp.writeLine(String.format("[#%d] [INFO] File named %s, size %d bytes | CRC %s", frameIndex, getF06aFilename(data), getFileSize(data), isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
 				return;
 			}
-            if (encodingType == 1){
+			else if (isHeaderBlock(frameIndex - 1)){
+                theApp.writeLine(String.format("[#%d] [INFO] CRC of file contents: 0x%02x%02x%02x%02x. File contents now follow... | CRC %s", frameIndex, data[0], data[1], data[2], data[3], isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
+            }
+				
+			String contents = "";
+			if (encodingType == 1){
                 //Parse ASCII
-				String contents = processF06aASCII(data, frameIndex, isValid);
-                if (frameIndex == 2){
-                    theApp.writeLine(String.format("[#%d] [INFO] CRC of file contents: 0x%02x%02x%02x%02x. File contents now follow... | CRC %s", frameIndex, data[0], data[1], data[2], data[3], isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
-                }
-				if (encodingType == 1){
-					//Additional check to avoid printing the block as ASCII in case a non-ASCII encoding is detected
-                	theApp.writeLine(String.format("[#%d] %s | CRC %s", frameIndex, contents, isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldMonospaceFont);
-				}
+				contents=processF06aASCII(data, frameIndex, isValid);
             }
-			if (encodingType == 0){
+            if (encodingType == 0){
                 //Parse raw binary
-                theApp.writeLine(String.format("[#%d] %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldMonospaceFont);
-            }
-		} else if (txType == 1) {
+				contents = processF06aBinary(data, frameIndex, isValid);
+			}
+			//Print normal block
+			theApp.writeLine(String.format("[#%d] %s | CRC %s", frameIndex, contents, isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldMonospaceFont);
+		}
+			
+		else if (txType == 1) {
 			theApp.writeLine(String.format("[#%d] %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldMonospaceFont);
 		} 
 
@@ -420,13 +428,25 @@ public class F06a extends FSK {
 		return filename;
 	}
 
+	private String processF06aBinary(int[] dataBlock, int frameIndex, boolean isValid){
+		String contents = "";
+		for (int i=0;i<16;i++){
+			if (isHeaderBlock(frameIndex-1) && i<4) {
+                //First 4 bytes of second block of a message are CRC of file contents so they can be omitted
+                i=4;
+            }
+			contents += String.format("%02x", dataBlock[i]);
+		}
+		return contents;
+	}
+
     //Convert the hex from a regular F06a block into readable ASCII, detect EOF and new lines automatically.
     private String processF06aASCII(int[] dataBlock, int frameIndex, boolean isValid){
         String contents = "";
 		int nonPrintableChars = 0;
 		for (int i=0;i<16;i++){
-            if (frameIndex == 2 && i<4) {
-                //First 4 bytes of block 2 are CRC of file contents so they can be omitted
+            if (isHeaderBlock(frameIndex-1) && i<4) {
+                //First 4 bytes of second block of a message are CRC of file contents so they can be omitted
                 i=4;
             }
             if (dataBlock [i] == 0 && isValid){
@@ -458,4 +478,37 @@ public class F06a extends FSK {
 		}
 		return contents;
     }
+
+	//Returns a list of blocks where a message start is. Also updates the global message table
+	private String processMetadataBlock(int da[]){
+		int positions[]= new int[8];
+		positions[0] = (da[2] << 3) | (da[3] >> 5);
+		positions[1] = (da[4] << 3) | (da[5] >> 5);
+		positions[2] = (da[6] << 3) | (da[7] >> 5);
+		positions[3] = (da[8] << 3) | (da[9] >> 5);
+		positions[4] = (da[10] << 3) | (da[11] >> 5);
+		positions[5] = (da[12] << 3) | (da[13] >> 5);
+		positions[6] = (da[14] << 3) | (da[15] >> 5);
+		
+		String msgList ="";
+		int index=0;
+		while (positions[index] != 0 && index < 8){
+			if (positions[index] != 0){
+				if (index != 0) msgList += ", ";
+				msgList += String.format("Message %d at block #%d", index + 1, positions[index]);
+			}
+			index++;
+		}
+
+		msgStartPos = positions;
+		return msgList;
+	} 
+
+	//Checks if the given block index contains the start of a message
+	private boolean isHeaderBlock(int index){
+		for (int i=0;i<8;i++){
+			if (msgStartPos[i] == index && msgStartPos[i] != 0) return true;
+		}
+		return false;
+	}
 }
