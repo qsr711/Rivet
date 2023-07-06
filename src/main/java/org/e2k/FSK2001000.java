@@ -332,7 +332,11 @@ public class FSK2001000 extends FSK {
 		if (frameIndex % 16 == 0) {
 			int frameCount = (data[0] << 3) | (data[1] >> 5);
 			int messageCount = data[1] & 0x1f;
-			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s)", frameIndex, frameCount, messageCount), Color.BLUE, theApp.boldFont);
+			if (messageCount > 7) isValid = false; //There cannot be more than 7 messages in F06
+			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s) | CRC %s", frameIndex, frameCount, messageCount, isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
+			if (isValid){
+				theApp.writeLine(String.format("[INFO] %s", processMetadataBlock(data)), Color.BLUE, theApp.boldFont);
+			} 
 			return;
 		}
 
@@ -361,7 +365,7 @@ public class FSK2001000 extends FSK {
 			theApp.writeLine(String.format("[INFO] F06a block detected. Switching to F06a decoding..."), Color.BLUE, theApp.boldFont);
 			theApp.setSystem(12);
 			theApp.setModeLabel(theApp.MODENAMES[12]);
-			txType=2;
+			return;
 		} else if (frameIndex == 1 && data[0] == 0x1b) {
 			txType = 0;
 		}
@@ -396,4 +400,27 @@ public class FSK2001000 extends FSK {
 		}
 		return invalidDigits;
 	}
+
+	//Returns a list of blocks where a message start is. Also updates the global message count
+	private String processMetadataBlock(int da[]){
+		int positions[]= new int[8];
+		positions[0] = (da[2] << 3) | (da[3] >> 5);
+		positions[1] = (da[4] << 3) | (da[5] >> 5);
+		positions[2] = (da[6] << 3) | (da[7] >> 5);
+		positions[3] = (da[8] << 3) | (da[9] >> 5);
+		positions[4] = (da[10] << 3) | (da[11] >> 5);
+		positions[5] = (da[12] << 3) | (da[13] >> 5);
+		positions[6] = (da[14] << 3) | (da[15] >> 5);
+		
+		String msgList ="";
+		int index=0;
+		while (positions[index] != 0 && index < 8){
+			if (positions[index] != 0){
+				if (index != 0) msgList += ", ";
+				msgList += String.format("Message %d at block #%d", index+1, positions[index]);
+			}
+			index++;
+		}
+		return msgList;
+	} 
 }
