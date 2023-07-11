@@ -18,36 +18,12 @@ package org.e2k;
 import java.awt.Color;
 import javax.swing.JOptionPane;
 
-public class F06a extends FSK {
-    private int baudRate=200;
-	private int state=0;
-	private double samplesPerSymbol;
-	private Rivet theApp;
-	public long sampleCount=0;
-	private long symbolCounter=0;
-	private CircularDataBuffer energyBuffer=new CircularDataBuffer();
-	private int characterCount=0;
-	private int highBin;
-	private int lowBin;
-	private final int MAXCHARLENGTH=80;
-	private double adjBuffer[]=new double[5];
-	private int adjCounter=0;
-	private CircularBitSet circularBitSet=new CircularBitSet();
-	private int bitCount=0;
-	private int blockCount=0;
+public class F06a extends FSK2001000 {
 	private int msgStartPos[]=new int[8];
-	private int missingBlockCount=0;
-	private int bitsSinceLastBlockHeader=0;
-	private int messageTotalBlockCount=0;
-	private CRC crcCalculator;
-    private int txType;
     private int encodingType; //0: blocks will be parsed as raw binary; 1: blocks will be parsed as ASCII
 
     public F06a (Rivet tapp,int baud)	{
-		baudRate=baud;
-		theApp=tapp;
-		circularBitSet.setTotalLength(288);
-		crcCalculator = new CRC(16, 0x1021, 0xffff, 0xffff, true, true);
+		super(tapp, baud);
 		encodingType = 0;
 	}
 
@@ -163,144 +139,6 @@ public class F06a extends FSK {
 		return true;
 	}
 
-    // Look for a sequence of 4 alternating tones with 1000 Hz difference
-	private String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
-		int difference;
-		// Get 4 symbols
-		int freq1=fsk2001000Freq(circBuf,waveData,0);
-		int bin1=getFreqBin();
-		// Check this first tone isn't just noise
-		if (getPercentageOfTotal()<5.0) return null;
-		int freq2=fsk2001000Freq(circBuf,waveData,(int)samplesPerSymbol*1);
-		int bin2=getFreqBin();
-		// Check we have a high low
-		if (freq2>freq1) return null;
-		// Check there is around 1000 Hz of difference between the tones
-		difference=freq1-freq2;
-		if ((difference<975)||(difference>1025) ) return null;
-		int freq3=fsk2001000Freq(circBuf,waveData,(int)samplesPerSymbol*2);
-		// Don't waste time carrying on if freq1 isn't the same as freq3
-		if (freq1!=freq3) return null;
-		int freq4=fsk2001000Freq(circBuf,waveData,(int)samplesPerSymbol*3);
-		// Check 2 of the symbol frequencies are different
-		if ((freq1!=freq3)||(freq2!=freq4)) return null;
-		// Check that 2 of the symbol frequencies are the same
-		if ((freq1==freq2)||(freq3==freq4)) return null;
-		// Store the bin numbers
-		if (freq1>freq2)	{
-			highBin=bin1;
-			lowBin=bin2;
-		}
-		else	{
-			highBin=bin2;
-			lowBin=bin1;
-		}
-		// If either the low bin or the high bin are zero there is a problem so return false
-		if ((lowBin==0)||(highBin==0)) return null;
-		String line=theApp.getTimeStamp()+" FSK200/1000 Sync Sequence Found";
-		if (theApp.isDebug()==true)	line=line+" (lowBin="+Integer.toString(lowBin)+" highBin="+Integer.toString(highBin)+")";
-		return line;
-	}
-
-    // Find the frequency of a FSK200/1000 symbol
-	// Currently the program only supports a sampling rate of 8000 KHz
-	private int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
-		// 8 KHz sampling
-		if (waveData.getSampleRate()==8000.0)	{
-			int freq=doFSK200500_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
-			return freq;
-		}
-		return -1;
-	}
-
-    // The "normal" way of determining the frequency of a FSK200/1000 symbol
-	// is to do two FFTs of the first and last halves of the symbol
-	// that allows us to use the data for the early/late gate and to detect a half bit (which is used as a stop bit)
-	private boolean fsk2001000FreqHalf (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
-		boolean out;
-		int sp=(int)samplesPerSymbol/2;
-		// First half
-		double early[]=do64FFTHalfSymbolBinRequest (circBuf,pos,sp,lowBin,highBin);
-		// Last half
-		double late[]=do64FFTHalfSymbolBinRequest (circBuf,(pos+sp),sp,lowBin,highBin);
-		// Feed the early late difference into a buffer
-		if ((early[0]+late[0])>(early[1]+late[1])) addToAdjBuffer(getPercentageDifference(early[0],late[0]));
-		else addToAdjBuffer(getPercentageDifference(early[1],late[1]));
-		// Calculate the symbol timing correction
-		symbolCounter=adjAdjust();
-		// Now work out the binary state represented by this symbol
-		double lowTotal=early[0]+late[0];
-		double highTotal=early[1]+late[1];
-		if (theApp.isInvertSignal()==false)	{
-			if (lowTotal>highTotal) out=false;
-			else out=true;
-		}
-		else	{
-			// If inverted is set invert the bit returned
-			if (lowTotal>highTotal) out=true;
-			else out=false;
-		}
-		// Is the bit stream being recorded ?
-		if (theApp.isBitStreamOut()==true)	{
-			if (out==true) theApp.bitStreamWrite("1");
-			else theApp.bitStreamWrite("0");
-		}
-		return out;
-	}
-
-    // Add a comparator output to a circular buffer of values
-	private void addToAdjBuffer (double in)	{
-		adjBuffer[adjCounter]=in;
-		adjCounter++;
-		if (adjCounter==adjBuffer.length) adjCounter=0;
-	}
-
-	// Return the average of the circular buffer
-	private double adjAverage()	{
-		int a;
-		double total=0.0;
-		for (a=0;a<adjBuffer.length;a++)	{
-			total=total+adjBuffer[a];
-		}
-		return (total/adjBuffer.length);
-	}
-
-	// Get the average value and return an adjustment value
-	private int adjAdjust()	{
-		double av=adjAverage();
-		double r=Math.abs(av)/10;
-		if (av<0) r=0-r;
-		return (int)r;
-	}
-
-	// Return a quality indicator
-	public String getQuailty()	{
-		String line="There were "+Integer.toString(blockCount)+" blocks in this message with " +Integer.toString(missingBlockCount)+" missing.";
-		return line;
-		}
-
-    // Compare a String with the known FSK200/1000 block header
-	private int compareSync (String comp)	{
-		// Inverse sync 0x82ED4F19
-		final String INVSYNC="10000010111011010100111100011001";
-		// Sync 0x7D12B0E6
-		final String SYNC="01111101000100101011000011100110";
-		// If the input String isn't the same length as the SYNC String then we have a serious problem !
-		if (comp.length()!=SYNC.length()) return 32;
-		int a,dif=0,invdif=0;
-		for (a=0;a<comp.length();a++)	{
-			if (comp.charAt(a)!=SYNC.charAt(a)) dif++;
-			if (comp.charAt(a)!=INVSYNC.charAt(a)) invdif++;
-		}
-		// If the inverted difference is less than 2 the user must have things the wrong way around
-		if (invdif<2)	{
-			if (theApp.isInvertSignal()==true) theApp.setInvertSignal(false);
-			else theApp.setInvertSignal(true);
-			return invdif;
-		}
-		return dif;
-	}
-
     // Process a FSK200/1000 block
 	private void processBlock() {
 		if (bitCount > 288) missingBlockCount = missingBlockCount + (bitCount / 288);
@@ -391,16 +229,6 @@ public class F06a extends FSK {
 		bitCount=0;
 		bitsSinceLastBlockHeader=0;
 		blockCount++;
-	}
-
-	// Check if this is a divider block
-	private boolean checkDividerBlock(int da[])	{
-		int a,zeroCount=0;
-		for (a=5;a<da.length;a++)	{
-			if (da[a]==0) zeroCount++;
-		}
-		if (zeroCount>=30) return true;
-		else return false;
 	}
 
 	//Convert big endian file size from an F06a block 1 into an integer
