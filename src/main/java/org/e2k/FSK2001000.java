@@ -19,27 +19,27 @@ import javax.swing.JOptionPane;
 
 public class FSK2001000 extends FSK {
 
-	private int baudRate=200;
-	private int state=0;
-	private double samplesPerSymbol;
-	private Rivet theApp;
+	protected int baudRate=200;
+	protected int state=0;
+	protected double samplesPerSymbol;
+	protected Rivet theApp;
 	public long sampleCount=0;
-	private long symbolCounter=0;
-	private CircularDataBuffer energyBuffer=new CircularDataBuffer();
-	private int characterCount=0;
-	private int highBin;
-	private int lowBin;
-	private final int MAXCHARLENGTH=80;
-	private double adjBuffer[]=new double[5];
-	private int adjCounter=0;
-	private CircularBitSet circularBitSet=new CircularBitSet();
-	private int bitCount=0;
-	private int blockCount=0;
-	private int missingBlockCount=0;
-	private int bitsSinceLastBlockHeader=0;
-	private int messageTotalBlockCount=0;
-	private CRC crcCalculator;
-	private int txType;
+	protected long symbolCounter=0;
+	protected CircularDataBuffer energyBuffer=new CircularDataBuffer();
+	protected int characterCount=0;
+	protected int highBin;
+	protected int lowBin;
+	protected final int MAXCHARLENGTH=80;
+	protected double adjBuffer[]=new double[5];
+	protected int adjCounter=0;
+	protected CircularBitSet circularBitSet=new CircularBitSet();
+	protected int bitCount=0;
+	protected int blockCount=0;
+	protected int missingBlockCount=0;
+	protected int bitsSinceLastBlockHeader=0;
+	protected int messageTotalBlockCount=0;
+	protected CRC crcCalculator;
+	protected int txType;
 
 	public FSK2001000 (Rivet tapp,int baud)	{
 		baudRate=baud;
@@ -154,7 +154,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Look for a sequence of 4 alternating tones with 1000 Hz difference
-	private String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
+	protected String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
 		int difference;
 		// Get 4 symbols
 		int freq1=fsk2001000Freq(circBuf,waveData,0);
@@ -194,7 +194,7 @@ public class FSK2001000 extends FSK {
 
 	// Find the frequency of a FSK200/1000 symbol
 	// Currently the program only supports a sampling rate of 8000 KHz
-	private int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
+	protected int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		// 8 KHz sampling
 		if (waveData.getSampleRate()==8000.0)	{
 			int freq=doFSK200500_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
@@ -206,7 +206,7 @@ public class FSK2001000 extends FSK {
 	// The "normal" way of determining the frequency of a FSK200/1000 symbol
 	// is to do two FFTs of the first and last halves of the symbol
 	// that allows us to use the data for the early/late gate and to detect a half bit (which is used as a stop bit)
-	private boolean fsk2001000FreqHalf (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
+	protected boolean fsk2001000FreqHalf (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		boolean out;
 		int sp=(int)samplesPerSymbol/2;
 		// First half
@@ -239,14 +239,14 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Add a comparator output to a circular buffer of values
-	private void addToAdjBuffer (double in)	{
+	protected void addToAdjBuffer (double in)	{
 		adjBuffer[adjCounter]=in;
 		adjCounter++;
 		if (adjCounter==adjBuffer.length) adjCounter=0;
 	}
 
 	// Return the average of the circular buffer
-	private double adjAverage()	{
+	protected double adjAverage()	{
 		int a;
 		double total=0.0;
 		for (a=0;a<adjBuffer.length;a++)	{
@@ -256,7 +256,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Get the average value and return an adjustment value
-	private int adjAdjust()	{
+	protected int adjAdjust()	{
 		double av=adjAverage();
 		double r=Math.abs(av)/10;
 		if (av<0) r=0-r;
@@ -270,7 +270,7 @@ public class FSK2001000 extends FSK {
 		}
 
 	// Compare a String with the known FSK200/1000 block header
-	private int compareSync (String comp)	{
+	protected int compareSync (String comp)	{
 		// Inverse sync 0x82ED4F19
 		final String INVSYNC="10000010111011010100111100011001";
 		// Sync 0x7D12B0E6
@@ -382,7 +382,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Check if this is a divider block
-	private boolean checkDividerBlock(int da[])	{
+	protected boolean checkDividerBlock(int da[])	{
 		int a,zeroCount=0;
 		for (a=5;a<da.length;a++)	{
 			if (da[a]==0) zeroCount++;
@@ -401,7 +401,7 @@ public class FSK2001000 extends FSK {
 		return invalidDigits;
 	}
 
-	//Returns a list of blocks where a message start is. Also updates the global message count
+	//Returns a list of blocks where a message start is.
 	private String processMetadataBlock(int da[]){
 		int positions[]= new int[8];
 		positions[0] = (da[2] << 3) | (da[3] >> 5);
