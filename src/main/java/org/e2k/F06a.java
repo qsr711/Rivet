@@ -27,10 +27,6 @@ public class F06a extends FSK2001000 {
 		encodingType = 0;
 	}
 
-    public int getBaudRate() {
-		return baudRate;
-	}
-
 	public void setState(int state) {
 		this.state=state;
 		if (state==1) theApp.setStatusLabel("Sync Hunt");
@@ -39,14 +35,10 @@ public class F06a extends FSK2001000 {
 		else if (state==3) theApp.setStatusLabel("Debug Only");
 	}
 
-	public int getState() {
-		return state;
-	}
-
     public void setEncoding(int encoding){
         this.encodingType=encoding;
-		if (getState()==2 && encodingType==0) theApp.setStatusLabel("Msg Hunt Binary");
-        else if (getState()==2 && encodingType==1) theApp.setStatusLabel("Msg Hunt ASCII");
+		if (state==2 && encodingType==0) theApp.setStatusLabel("Msg Hunt Binary");
+        else if (state==2 && encodingType==1) theApp.setStatusLabel("Msg Hunt ASCII");
     }
 
     public int getEncoding(){
