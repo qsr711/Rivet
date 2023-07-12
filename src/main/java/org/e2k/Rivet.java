@@ -901,6 +901,12 @@ public class Rivet {
 			// CIS36-50 shift
 			line="<cis3650shift val='"+Integer.toString(cis3650Handler.getShift())+"'/>\n";
 			xmlfile.write(line);
+			//F06a ASCII mode
+			line="<F06a_ASCII val='";
+			if (f06aASCII==true) line+="TRUE";
+			else line+="FALSE";
+			line+="'/>\n";
+			xmlfile.write(line);
 			// All done so close the root item //
 			line="</settings>";
 			xmlfile.write(line);
@@ -1015,6 +1021,11 @@ public class Rivet {
 					// CIS36-50 Shift
 					else if (qName.equals("cis3650shift"))	{
 						cis3650Handler.setShift(Integer.parseInt(aval));
+					}
+					// F06a ASCII parsing
+					else if (qName.equals("F06a_ASCII")) {
+						if (aval.equals("TRUE")) setF06aASCII(true);
+						else setF06aASCII(false);
 					}
 					
 				}	
