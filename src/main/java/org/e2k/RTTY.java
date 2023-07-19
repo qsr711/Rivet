@@ -179,7 +179,7 @@ public class RTTY extends FSK {
 							characterCount=0; 
 						}
 						else	{
-							theApp.writeChar(ch,Color.BLACK,theApp.boldFont);
+							theApp.writeChar(ch,Color.BLACK,theApp.boldMonospaceFont);
 							characterCount++;
 						}
 					}

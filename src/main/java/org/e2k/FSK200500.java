@@ -138,7 +138,7 @@ public class FSK200500 extends FSK {
 					// If debugging display the character buffer in binary form + the number of bits since the last character and this baudot character
 					if (theApp.isDebug()==true)	{
 						String dout=getCharBuffer()+" ("+Integer.toString(bcount)+")  "+getBaudotChar();
-						theApp.writeLine(dout,Color.BLACK,theApp.boldFont);
+						theApp.writeLine(dout,Color.BLACK,theApp.boldMonospaceFont);
 					}
 					else	{
 						// Display the character in the standard way
@@ -149,7 +149,7 @@ public class FSK200500 extends FSK {
 						else if (ch.equals(getBAUDOT_LETTERS(8))) theApp.newLineWrite();
 						else	{
 							lineBuffer.append(ch);
-							theApp.writeChar(ch,Color.BLACK,theApp.boldFont);
+							theApp.writeChar(ch,Color.BLACK,theApp.boldMonospaceFont);
 							characterCount++;
 							// Does the line buffer end with "162)5761" if so start a new line
 							if (lineBuffer.lastIndexOf("162)5761")!=-1) characterCount=MAXCHARLENGTH;
