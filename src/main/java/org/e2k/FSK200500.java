@@ -106,6 +106,7 @@ public class FSK200500 extends FSK {
 			if (dout!=null)	{
 				setState(2);
 				theApp.writeLine(dout,Color.BLACK,theApp.italicFont);
+				theApp.newLineWrite();
 				energyBuffer.setBufferCounter(0);
 				bcount=0;
 				totalCharCounter=0;
