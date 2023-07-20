@@ -165,6 +165,12 @@ Build 89 Improve the decoded CROWD36 display and add a debug output
          Add 150 baud support for RTTY and raw FSK
 Build 90 Rewrite the FSK200/1000 block parser to use the newest findings
          Fix the XPA2 decoder being unreliable after a while
+Build 91 Add selectable F06a decoding in two different formats (ASCII and binary)
+         Improve F06a detection when using FSK200/1000
+         Improve FSK200/1000 metadata block displays
+         Minor fixes and display changes in FSK200/500, XPA, XPA2, Baudot
+         Add and update some links
+         Gradle wrapper update to 7.5
                 
 Reported Bugs
 -------------
