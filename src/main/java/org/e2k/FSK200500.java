@@ -230,7 +230,7 @@ public class FSK200500 extends FSK {
 	private int fsk200500Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		// 8 KHz sampling
 		if (waveData.getSampleRate()==8000.0)	{
-			int freq=doFSK200500_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
+			int freq=doFSK200500_FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
 			return freq;
 		}
 		return -1;
@@ -243,9 +243,9 @@ public class FSK200500 extends FSK {
 		int v;
 		int sp=(int)samplesPerSymbol/2;
 		// First half
-		double early[]=do64FFTHalfSymbolBinRequest (circBuf,pos,sp,lowBin,highBin);
+		double early[]=do200baudHalfSymbolBinRequest (circBuf,pos,sp,lowBin,highBin);
 		// Last half
-		double late[]=do64FFTHalfSymbolBinRequest (circBuf,(pos+sp),sp,lowBin,highBin);
+		double late[]=do200baudHalfSymbolBinRequest (circBuf,(pos+sp),sp,lowBin,highBin);
 		// Determine the symbol value
 		int high1,high2;
 		if (early[0]>early[1]) high1=0;

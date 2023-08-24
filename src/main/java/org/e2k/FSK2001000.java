@@ -167,7 +167,7 @@ public class FSK2001000 extends FSK {
 		if (freq2>freq1) return null;
 		// Check there is around 1000 Hz of difference between the tones
 		difference=freq1-freq2;
-		if ((difference<975)||(difference>1025) ) return null;
+		if ((difference<975)||(difference>1025)) return null;
 		int freq3=fsk2001000Freq(circBuf,waveData,(int)samplesPerSymbol*2);
 		// Don't waste time carrying on if freq1 isn't the same as freq3
 		if (freq1!=freq3) return null;
@@ -195,9 +195,9 @@ public class FSK2001000 extends FSK {
 	// Find the frequency of a FSK200/1000 symbol
 	// Currently the program only supports a sampling rate of 8000 KHz
 	protected int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
-		// 8 KHz sampling
+		// 8 and 12 KHz sampling
 		if (waveData.getSampleRate()==8000.0)	{
-			int freq=doFSK200500_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
+			int freq=doRTTY_FFT(circBuf,waveData,pos,(int)samplesPerSymbol,baudRate);
 			return freq;
 		}
 		return -1;
@@ -210,9 +210,9 @@ public class FSK2001000 extends FSK {
 		boolean out;
 		int sp=(int)samplesPerSymbol/2;
 		// First half
-		double early[]=do64FFTHalfSymbolBinRequest (circBuf,pos,sp,lowBin,highBin);
+		double early[]=doRTTYHalfSymbolBinRequest (baudRate,circBuf,pos,sp,lowBin,highBin);
 		// Last half
-		double late[]=do64FFTHalfSymbolBinRequest (circBuf,(pos+sp),sp,lowBin,highBin);
+		double late[]=doRTTYHalfSymbolBinRequest (baudRate,circBuf,(pos+sp),sp,lowBin,highBin);
 		// Feed the early late difference into a buffer
 		if ((early[0]+late[0])>(early[1]+late[1])) addToAdjBuffer(getPercentageDifference(early[0],late[0]));
 		else addToAdjBuffer(getPercentageDifference(early[1],late[1]));

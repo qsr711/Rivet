@@ -222,7 +222,7 @@ public class RTTY extends FSK {
 	private int rttyFreq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		// 8 KHz sampling
 		if (waveData.getSampleRate()==8000.0)	{
-			int freq=doRTTY_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol,baudRate);
+			int freq=doRTTY_FFT(circBuf,waveData,pos,(int)samplesPerSymbol,baudRate);
 			return freq;
 		}
 		return -1;
@@ -390,9 +390,9 @@ public class RTTY extends FSK {
 		int v=0;
 		int sp=(int)samplesPerSymbol/2;
 		// First half
-		double early[]=doRTTYHalfSymbolBinRequest(baudRate,circBuf,pos,lowBin,highBin);
+		double early[]=doRTTYHalfSymbolBinRequest(baudRate,circBuf,pos,sp,lowBin,highBin);
 		// Last half
-		double late[]=doRTTYHalfSymbolBinRequest(baudRate,circBuf,(pos+sp),lowBin,highBin);
+		double late[]=doRTTYHalfSymbolBinRequest(baudRate,circBuf,(pos+sp),sp,lowBin,highBin);
 		// Store the previous symbol energy total
 		previousSymbolTotal=symbolTotal;
 		symbolTotal=early[0]+late[0]+early[1]+late[1];

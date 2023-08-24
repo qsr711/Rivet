@@ -28,7 +28,7 @@ public class FSK extends FFT {
 	public double kalmanOld=0.0; 
 			
 	// Runs a 64 point FFT on a FSK200/500 sample recorded at 8 KHz 
-	public int doFSK200500_8000FFT (CircularDataBuffer circBuf,WaveData waveData,int start,int ss)	{
+	public int doFSK200500_FFT (CircularDataBuffer circBuf,WaveData waveData,int start,int ss)	{
 		// Get the data from the circular buffer
 	    double datao[]=circBuf.extractDataDouble(start,ss);
 	    double datar[]=new double[FFT_64_SIZE];
@@ -45,7 +45,7 @@ public class FSK extends FFT {
 	}
 	
 	// Determines a frequency for the RTTY class
-	public int doRTTY_8000FFT (CircularDataBuffer circBuf,WaveData waveData,int start,int ss,double baud)	{
+	 public int doRTTY_FFT (CircularDataBuffer circBuf,WaveData waveData,int start,int ss,double baud)	{
 		// 45.45 baud
 	    if (baud==45.45)	{
 	    	// Get the data from the circular buffer
@@ -80,7 +80,7 @@ public class FSK extends FFT {
 	    // 150 baud
 	    else if (baud==150)	return (do150baudFFT(circBuf,waveData,start));
 	    // 200 baud
-	    else if (baud==200) return (doFSK200500_8000FFT (circBuf,waveData,start,ss));
+	    else if (baud==200) return (doFSK200500_FFT (circBuf,waveData,start,ss));
 	    // 300 baud
 	    else if (baud==300) return (do300baudFFT(circBuf,waveData,start));
 	    // 600 baud
@@ -251,7 +251,7 @@ public class FSK extends FFT {
 		}	
 	
 	// Calculates the half symbol bin values for the RTTY code
-	public double[] doRTTYHalfSymbolBinRequest (double baud,CircularDataBuffer circBuf,int start,int bin0,int bin1)	{
+	public double[] doRTTYHalfSymbolBinRequest (double baud,CircularDataBuffer circBuf,int start,int samples,int bin0,int bin1)	{
 		int a;
 		double vals[]=new double[2];
 		// 45.45 baud
@@ -496,7 +496,7 @@ public class FSK extends FFT {
 		}
 		
 	// Returns two bins from a 64 bin FFT covering half a symbol
-	public double[] do64FFTHalfSymbolBinRequest (CircularDataBuffer circBuf,int start,int samples,int bin0,int bin1)	{
+	public double[] do200baudHalfSymbolBinRequest (CircularDataBuffer circBuf,int start,int samples,int bin0,int bin1)	{
 		double vals[]=new double[2];
 		int a;
 		double datar[]=new double[FFT_64_SIZE];

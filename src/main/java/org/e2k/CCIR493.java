@@ -166,7 +166,7 @@ public class CCIR493 extends FSK {
 	
 	// Get the frequency at a certain symbol
 	private int getSymbolFreq (CircularDataBuffer circBuf,WaveData waveData,int start)	{
-		int fr=doCCIR493_160FFT(circBuf,waveData,start);
+		int fr=doRTTY_FFT(circBuf,waveData,start,(int)samplesPerSymbol,100);
 		return fr;
 	}	
 	
@@ -174,9 +174,9 @@ public class CCIR493 extends FSK {
 	private boolean getSymbolFreqBin (CircularDataBuffer circBuf,WaveData waveData,int start)	{
 		boolean bit;
 		// Run FFTs on the early and late parts of the symbol
-		double early[]=do160FFTHalfSymbolBinRequest(circBuf,start,lowBin,highBin);
+		double early[]=doRTTYHalfSymbolBinRequest(100,circBuf,start,(int)samplesPerSymbol/2,lowBin,highBin);
 		start=start+((int)samplesPerSymbol/2);
-		double late[]=do160FFTHalfSymbolBinRequest(circBuf,start,lowBin,highBin);
+		double late[]=doRTTYHalfSymbolBinRequest(100,circBuf,start,(int)samplesPerSymbol/2,lowBin,highBin);
 		// Now work out the binary state represented by this symbol
 		double lowTotal=early[0]+late[0];
 		double highTotal=early[1]+late[1];
