@@ -549,9 +549,21 @@ public class Rivet {
 			this.soundCardInput=false;
 		}
 		else	{
-			// CROWD36 , XPA , XPA2 , CIS36-50 , FSK200/500 , FSK200/1000 , CCIR493-4 , GW , RTTY , RDFT , Experimental, F06a
-			if ((system==0)||(system==1)||(system==2)||(system==3)||(system==4)||(system==5)||(system==6)||(system==8)||(system==7)||(system==9)||(system==10)||(system==11)||(system==12))	{
-				WaveData waveSetting=new WaveData();
+			WaveData waveSetting=new WaveData();
+			// CIS36-50 , FSK200/500 , FSK200/1000 , RAW FSK , CCIR493-4 , GW , RTTY , RDFT , F06a
+			if ((system==5)||(system==6)||(system==8)||(system==7)||(system==9)||(system==10)||(system==11)||(system==12))	{
+				waveSetting.setChannels(1);
+				waveSetting.setEndian(true);
+				waveSetting.setSampleSizeInBits(16);
+				waveSetting.setFromFile(false);
+				waveSetting.setSampleRate(12000.0);
+				waveSetting.setBytesPerFrame(2);
+				inputThread.setupAudio(waveSetting);
+				waveData=waveSetting;
+				this.soundCardInput=true;	
+			}
+			// XPA , XPA2 , CROWD-36 , Experimental
+			else if ((system==0)||(system==1)||(system==2)||(system==3)||(system==4)){
 				waveSetting.setChannels(1);
 				waveSetting.setEndian(true);
 				waveSetting.setSampleSizeInBits(16);
@@ -560,7 +572,7 @@ public class Rivet {
 				waveSetting.setBytesPerFrame(2);
 				inputThread.setupAudio(waveSetting);
 				waveData=waveSetting;
-				this.soundCardInput=true;	
+				this.soundCardInput=true;
 			}
 			
 		}
