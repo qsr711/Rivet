@@ -132,7 +132,7 @@ public class FSK200500 extends FSK {
 				}
 				// If this is a full bit add it to the character buffer
 				// If it is a half bit it signals the end of a character
-				if (ibit==2)	{
+				if ((!theApp.isInvertSignal() && ibit==2) || (theApp.isInvertSignal() && ibit==3))	{
 					totalCharCounter++;
 					symbolCounter=(int)samplesPerSymbol/2;
 					// If debugging display the character buffer in binary form + the number of bits since the last character and this baudot character

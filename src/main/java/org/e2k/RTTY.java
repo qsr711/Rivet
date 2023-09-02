@@ -150,7 +150,7 @@ public class RTTY extends FSK {
 				if ((av>40.0)&&(missingCharCounter>2)) setState(1);
 					
 				// Is this the end of a character
-				if (((stopBits==1.5)||(stopBits==2.5))&&(ibit==2))	{
+				if (((!theApp.isInvertSignal() && (stopBits==1.5)||(stopBits==2.5))&&(ibit==2)) || (theApp.isInvertSignal() && (stopBits==1.5)||(stopBits==2.5))&&(ibit==3))	{
 					cend=true;
 				}
 				else if (stopBits==1)	{
