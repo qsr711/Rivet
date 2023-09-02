@@ -50,7 +50,7 @@ public class GW extends FSK {
 		// Initial startup
 		if (state==0)	{
 			// Check the sample rate
-			if (waveData.getSampleRate()!=8000.0)	{
+			if (waveData.getSampleRate()!=8000.0 && waveData.getSampleRate()!=12000.0)	{
 				state=-1;
 				JOptionPane.showMessageDialog(null,"WAV files containing\nGW FSK recordings must have\nbeen recorded at a sample rate\nof 8 KHz.","Rivet", JOptionPane.INFORMATION_MESSAGE);
 				return false;

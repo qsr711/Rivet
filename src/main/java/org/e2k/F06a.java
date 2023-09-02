@@ -49,7 +49,7 @@ public class F06a extends FSK2001000 {
 		// Just starting
 		if (state==0)	{
 			// Check the sample rate
-			if (waveData.getSampleRate()!=8000.0)	{
+			if (waveData.getSampleRate()!=8000.0 && waveData.getSampleRate()!=12000.0)	{
 				state=-1;
 				JOptionPane.showMessageDialog(null,"WAV files containing\nFSK200/1000 recordings must have\nbeen recorded at a sample rate\nof 8 KHz.","Rivet", JOptionPane.INFORMATION_MESSAGE);
 				return false;

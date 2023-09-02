@@ -71,7 +71,7 @@ public class FSK2001000 extends FSK {
 		// Just starting
 		if (state==0)	{
 			// Check the sample rate
-			if (waveData.getSampleRate()!=8000.0)	{
+			if (waveData.getSampleRate()!=8000.0 && waveData.getSampleRate()!=12000.0)	{
 				state=-1;
 				JOptionPane.showMessageDialog(null,"WAV files containing\nFSK200/1000 recordings must have\nbeen recorded at a sample rate\nof 8 KHz.","Rivet", JOptionPane.INFORMATION_MESSAGE);
 				return false;
@@ -196,7 +196,7 @@ public class FSK2001000 extends FSK {
 	// Currently the program only supports a sampling rate of 8000 KHz
 	protected int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		// 8 and 12 KHz sampling
-		if (waveData.getSampleRate()==8000.0)	{
+		if (waveData.getSampleRate()==8000.0 || waveData.getSampleRate()==12000.0)	{
 			int freq=doRTTY_FFT(circBuf,waveData,pos,(int)samplesPerSymbol,baudRate);
 			return freq;
 		}
