@@ -188,6 +188,7 @@ public class F06a extends FSK2001000 {
             theApp.writeLine(String.format("[INFO] Standard F06 header block detected. Switching to F06 decoding..."), Color.BLUE, theApp.boldFont);
             theApp.setSystem(8);
 			theApp.setModeLabel(theApp.MODENAMES[8]);
+			transferSyncData(theApp.fsk2001000Handler);
 			txType=2;
 		}
 

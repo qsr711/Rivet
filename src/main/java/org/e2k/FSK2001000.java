@@ -365,6 +365,7 @@ public class FSK2001000 extends FSK {
 			theApp.writeLine(String.format("[INFO] F06a block detected. Switching to F06a decoding..."), Color.BLUE, theApp.boldFont);
 			theApp.setSystem(12);
 			theApp.setModeLabel(theApp.MODENAMES[12]);
+			transferSyncData(theApp.f06aHandler);
 			return;
 		} else if (frameIndex == 1 && data[0] == 0x1b) {
 			txType = 0;
@@ -423,4 +424,23 @@ public class FSK2001000 extends FSK {
 		}
 		return msgList;
 	} 
+
+	//Copies the sync data to another FSK2001000 decoder
+	//Used when hot-switching between F06 and F06a to not waste time syncing for a second time
+	protected void transferSyncData(FSK2001000 destination){
+		destination.setState(this.getState());
+		destination.samplesPerSymbol=this.samplesPerSymbol;
+		destination.sampleCount=this.sampleCount;
+		destination.symbolCounter=this.symbolCounter;
+		destination.energyBuffer=this.energyBuffer;
+		destination.highBin=this.highBin;
+		destination.lowBin=this.lowBin;
+		destination.adjBuffer=this.adjBuffer;
+		destination.adjCounter=this.adjCounter;
+		destination.circularBitSet=this.circularBitSet;
+		destination.bitCount=this.bitCount;
+		destination.blockCount=this.blockCount;
+		destination.missingBlockCount=this.missingBlockCount;
+		destination.bitsSinceLastBlockHeader=this.bitsSinceLastBlockHeader;
+	}
 }
