@@ -591,7 +591,7 @@ public class FSK extends FFT {
 			//12khz
 			case 12000:
 				samData=circBuf.extractDataDouble(start,120);
-				datar=new double[FFT_160_SIZE];
+				datar=new double[FFT_240_SIZE];
 				// Run the data through a Blackman window
 				for (int a=0;a<datar.length;a++)	{
 					if ((a>=20)&&(a<140)) datar[a]=samData[a-20];
@@ -628,14 +628,14 @@ public class FSK extends FFT {
 			//12khz
 			case 12000:
 				samData=circBuf.extractDataDouble(start,ss);
-				datar=new double[FFT_160_SIZE];
+				datar=new double[FFT_240_SIZE];
 				// Run the data through a Blackman window
 				for (int a=0;a<datar.length;a++)	{
-					if ((a>=40)&&(a<120)) datar[a]=samData[a-40];
+					if ((a>=80)&&(a<160)) datar[a]=samData[a-80];
 					else datar[a]=0.0;
 					datar[a]=windowBlackman(datar[a],a,datar.length);
 				}		
-				fft160.realForward(datar);
+				fft240.realForward(datar);
 				spec=getSpectrum(datar);
 				return getFFTFreq (spec,waveData.getSampleRate());
 			}
@@ -699,14 +699,14 @@ public class FSK extends FFT {
 			//12khz
 			case 12000:
 				samData=circBuf.extractDataDouble(start,ss);
-				datar=new double[FFT_64_SIZE];
+				datar=new double[FFT_96_SIZE];
 				// Run the data through a Blackman window
 				for (int a=0;a<datar.length;a++)	{
-					if ((a>=12)&&(a<52)) datar[a]=samData[a-12];
+					if ((a>=28)&&(a<68)) datar[a]=samData[a-28];
 					else datar[a]=0.0;
 					datar[a]=windowBlackman(datar[a],a,datar.length);
 				}		
-				fft64.realForward(datar);
+				fft96.realForward(datar);
 				spec=getSpectrum(datar);
 				return getFFTFreq (spec,waveData.getSampleRate());
 			}
@@ -736,14 +736,14 @@ public class FSK extends FFT {
 			//12khz
 			case 12000:
 				samData=circBuf.extractDataDouble(start,ss);
-				datar=new double[FFT_64_SIZE];
+				datar=new double[FFT_96_SIZE];
 				// Run the data through a Blackman window
 				for (int a=0;a<datar.length;a++)	{
-					if ((a>=22)&&(a<42)) datar[a]=samData[a-22];
+					if ((a>=38)&&(a<58)) datar[a]=samData[a-38];
 					else datar[a]=0.0;
 					datar[a]=windowBlackman(datar[a],a,datar.length);
 				}		
-				fft64.realForward(datar);
+				fft96.realForward(datar);
 				spec=getSpectrum(datar);
 				return getFFTFreq (spec,waveData.getSampleRate());
 			}
