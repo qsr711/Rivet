@@ -62,7 +62,7 @@ public class CCIR493 extends FSK {
 			// Check the sample rate
 			if (waveData.getSampleRate()!=8000.0 && waveData.getSampleRate()!=12000.0)	{
 				state=-1;
-				JOptionPane.showMessageDialog(null,"WAV files containing\nCCIR493-4 recordings must have\nbeen recorded at a sample rate\nof 8 KHz.","Rivet", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(null,"WAV files containing\nCCIR493-4 recordings must have\nbeen recorded at a sample rate\nof 8 KHz or 12 Khz.","Rivet", JOptionPane.INFORMATION_MESSAGE);
 				return false;
 			}
 			// Check this is a mono recording
