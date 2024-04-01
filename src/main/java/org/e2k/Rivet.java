@@ -191,6 +191,10 @@ public class Rivet {
 		if (system==1) xpaHandler.setBaudRate(10);
 		// 20 Baud XPA
 		else if (system==3) xpaHandler.setBaudRate(20);
+
+		//If there is a running soundcard input, reopen it with the correct sample rate
+		//SetSoundcardInput already handles the closing and opening of the soundcard
+		if (isSoundCardInput()) setSoundCardInput(true);
 	}
 
 	public int getSystem() {
@@ -694,24 +698,6 @@ public class Rivet {
 		 // Shift 
 		 JLabel labelShift=new JLabel("Shift (50 - 2000 Hz) : ");
 		 JTextField fieldShift = new JTextField(Integer.toString(rttyHandler.getShift()),4);		
-		 /*
-		 final String SHIFTS[]={"75 Hz","150 Hz","170 Hz","200 Hz","250 Hz","300 Hz","400 Hz","425 Hz","450 Hz","500 Hz","600 Hz","625 Hz","800 Hz","850 Hz","1000 Hz"};
-		 JComboBox <String> shiftList=new JComboBox <String>(SHIFTS);
-		 if (rttyHandler.getShift()==75) shiftList.setSelectedIndex(0);
-		 else if (rttyHandler.getShift()==150) shiftList.setSelectedIndex(1);
-		 else if (rttyHandler.getShift()==170) shiftList.setSelectedIndex(2); 
-		 else if (rttyHandler.getShift()==200) shiftList.setSelectedIndex(3); 
-		 else if (rttyHandler.getShift()==250) shiftList.setSelectedIndex(4);
-		 else if (rttyHandler.getShift()==300) shiftList.setSelectedIndex(5);
-		 else if (rttyHandler.getShift()==400) shiftList.setSelectedIndex(6); 
-		 else if (rttyHandler.getShift()==425) shiftList.setSelectedIndex(7); 
-		 else if (rttyHandler.getShift()==450) shiftList.setSelectedIndex(8); 
-		 else if (rttyHandler.getShift()==500) shiftList.setSelectedIndex(9); 
-		 else if (rttyHandler.getShift()==600) shiftList.setSelectedIndex(10); 
-		 else if (rttyHandler.getShift()==625) shiftList.setSelectedIndex(11); 
-		 else if (rttyHandler.getShift()==800) shiftList.setSelectedIndex(12); 
-		 else if (rttyHandler.getShift()==850) shiftList.setSelectedIndex(13); 
-		 else if (rttyHandler.getShift()==1000) shiftList.setSelectedIndex(14); */
 		 panel.add(labelShift);
 		 panel.add(fieldShift);
 		 // Stop Bits
@@ -777,67 +763,6 @@ public class Rivet {
 				rttyHandler.setBaudRate(600);
 				fskHandler.setBaudRate(600);
 			}
-			/*
-			if (shiftList.getSelectedIndex()==0)	{
-				rttyHandler.setShift(75);
-				fskHandler.setShift(75);
-			}			
-			if (shiftList.getSelectedIndex()==1)	{
-				rttyHandler.setShift(150);
-				fskHandler.setShift(150);
-			}			
-			if (shiftList.getSelectedIndex()==2)	{
-				rttyHandler.setShift(170);
-				fskHandler.setShift(170);
-			}
-			if (shiftList.getSelectedIndex()==3)	{
-				rttyHandler.setShift(200);
-				fskHandler.setShift(200);
-			}			
-			if (shiftList.getSelectedIndex()==4)	{
-				rttyHandler.setShift(250);
-				fskHandler.setShift(250);
-			}	
-			if (shiftList.getSelectedIndex()==5)	{
-				rttyHandler.setShift(300);
-				fskHandler.setShift(300);
-			}		
-			if (shiftList.getSelectedIndex()==6)	{
-				rttyHandler.setShift(400);
-				fskHandler.setShift(400);
-			}			
-			if (shiftList.getSelectedIndex()==7)	{
-				rttyHandler.setShift(425);
-				fskHandler.setShift(425);
-			}
-			if (shiftList.getSelectedIndex()==8)	{
-				rttyHandler.setShift(450);
-				fskHandler.setShift(450);
-			}
-			if (shiftList.getSelectedIndex()==9)	{
-				rttyHandler.setShift(500);
-				fskHandler.setShift(500);
-			}
-			if (shiftList.getSelectedIndex()==10)	{
-				rttyHandler.setShift(600);
-				fskHandler.setShift(600);
-			}
-			if (shiftList.getSelectedIndex()==11)	{
-				rttyHandler.setShift(625);
-				fskHandler.setShift(625);
-			}
-			if (shiftList.getSelectedIndex()==12)	{
-				rttyHandler.setShift(800);
-				fskHandler.setShift(800);
-			}
-			if (shiftList.getSelectedIndex()==13)	{
-				rttyHandler.setShift(850);
-				fskHandler.setShift(850);
-			}
-			if (shiftList.getSelectedIndex()==14)	{
-				rttyHandler.setShift(1000);
-				fskHandler.setShift(1000);
-			}*/
 			// Stop Bits
 			if (stopBitsList.getSelectedIndex()==0) rttyHandler.setStopBits(1.0);
 			if (stopBitsList.getSelectedIndex()==1) rttyHandler.setStopBits(1.5);
