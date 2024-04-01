@@ -8,7 +8,7 @@ java {
 }
 
 group 'org.e2k'
-version '0.90'
+version '0.92'
 
 repositories {
     mavenCentral()
