@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -691,7 +692,9 @@ public class Rivet {
 		 panel.add(labelBaud);
 		 panel.add(baudRateList);
 		 // Shift 
-		 JLabel labelShift=new JLabel("Shift : ");		
+		 JLabel labelShift=new JLabel("Shift (50 - 2000 Hz) : ");
+		 JTextField fieldShift = new JTextField(Integer.toString(rttyHandler.getShift()),4);		
+		 /*
 		 final String SHIFTS[]={"75 Hz","150 Hz","170 Hz","200 Hz","250 Hz","300 Hz","400 Hz","425 Hz","450 Hz","500 Hz","600 Hz","625 Hz","800 Hz","850 Hz","1000 Hz"};
 		 JComboBox <String> shiftList=new JComboBox <String>(SHIFTS);
 		 if (rttyHandler.getShift()==75) shiftList.setSelectedIndex(0);
@@ -708,9 +711,9 @@ public class Rivet {
 		 else if (rttyHandler.getShift()==625) shiftList.setSelectedIndex(11); 
 		 else if (rttyHandler.getShift()==800) shiftList.setSelectedIndex(12); 
 		 else if (rttyHandler.getShift()==850) shiftList.setSelectedIndex(13); 
-		 else if (rttyHandler.getShift()==1000) shiftList.setSelectedIndex(14); 
+		 else if (rttyHandler.getShift()==1000) shiftList.setSelectedIndex(14); */
 		 panel.add(labelShift);
-		 panel.add(shiftList);
+		 panel.add(fieldShift);
 		 // Stop Bits
 		 JLabel labelStop=new JLabel("Stop Bits (Baudot only) : ");
 		 final String STOPBITS[]={"1 Bit","1.5 Bits","2 Bits","2.5 Bits"};
@@ -725,6 +728,18 @@ public class Rivet {
 		 int resp=JOptionPane.showConfirmDialog(window,panel,"Baudot & FSK Options",JOptionPane.OK_CANCEL_OPTION,JOptionPane.QUESTION_MESSAGE);
 		 // If the user has clicked on the OK option then change values in the RTTY object
 		 if (resp==JOptionPane.OK_OPTION)	{
+			// Shift
+			int newShift = rttyHandler.getShift();
+			try{
+				newShift = Integer.valueOf(fieldShift.getText());
+				//Detect invalid values for shift
+				if (newShift<50 || newShift>2000) throw new NumberFormatException();
+				rttyHandler.setShift(newShift);
+			}
+			catch (NumberFormatException e) { //Don't save the value if it is invalid, but save the remaining options
+				JOptionPane.showMessageDialog(panel,"Invalid shift value ("+ fieldShift.getText() + ").\nPlease enter a number between 50 and 2000.","Error saving settings", JOptionPane.ERROR_MESSAGE);
+			}
+
 			// Baud Rate
 			if (baudRateList.getSelectedIndex()==0)	{
 				rttyHandler.setBaudRate(45.45);
@@ -762,7 +777,7 @@ public class Rivet {
 				rttyHandler.setBaudRate(600);
 				fskHandler.setBaudRate(600);
 			}
-			// Shift
+			/*
 			if (shiftList.getSelectedIndex()==0)	{
 				rttyHandler.setShift(75);
 				fskHandler.setShift(75);
@@ -822,7 +837,7 @@ public class Rivet {
 			if (shiftList.getSelectedIndex()==14)	{
 				rttyHandler.setShift(1000);
 				fskHandler.setShift(1000);
-			}
+			}*/
 			// Stop Bits
 			if (stopBitsList.getSelectedIndex()==0) rttyHandler.setStopBits(1.0);
 			if (stopBitsList.getSelectedIndex()==1) rttyHandler.setStopBits(1.5);
