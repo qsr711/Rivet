@@ -19,27 +19,27 @@ import javax.swing.JOptionPane;
 
 public class FSK2001000 extends FSK {
 
-	private int baudRate=200;
-	private int state=0;
-	private double samplesPerSymbol;
-	private Rivet theApp;
+	protected int baudRate=200;
+	protected int state=0;
+	protected double samplesPerSymbol;
+	protected Rivet theApp;
 	public long sampleCount=0;
-	private long symbolCounter=0;
-	private CircularDataBuffer energyBuffer=new CircularDataBuffer();
-	private int characterCount=0;
-	private int highBin;
-	private int lowBin;
-	private final int MAXCHARLENGTH=80;
-	private double adjBuffer[]=new double[5];
-	private int adjCounter=0;
-	private CircularBitSet circularBitSet=new CircularBitSet();
-	private int bitCount=0;
-	private int blockCount=0;
-	private int missingBlockCount=0;
-	private int bitsSinceLastBlockHeader=0;
-	private int messageTotalBlockCount=0;
-	private CRC crcCalculator;
-	private int txType;
+	protected long symbolCounter=0;
+	protected CircularDataBuffer energyBuffer=new CircularDataBuffer();
+	protected int characterCount=0;
+	protected int highBin;
+	protected int lowBin;
+	protected final int MAXCHARLENGTH=80;
+	protected double adjBuffer[]=new double[5];
+	protected int adjCounter=0;
+	protected CircularBitSet circularBitSet=new CircularBitSet();
+	protected int bitCount=0;
+	protected int blockCount=0;
+	protected int missingBlockCount=0;
+	protected int bitsSinceLastBlockHeader=0;
+	protected int messageTotalBlockCount=0;
+	protected CRC crcCalculator;
+	protected int txType;
 
 	public FSK2001000 (Rivet tapp,int baud)	{
 		baudRate=baud;
@@ -154,7 +154,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Look for a sequence of 4 alternating tones with 1000 Hz difference
-	private String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
+	protected String syncSequenceHunt (CircularDataBuffer circBuf,WaveData waveData)	{
 		int difference;
 		// Get 4 symbols
 		int freq1=fsk2001000Freq(circBuf,waveData,0);
@@ -194,7 +194,7 @@ public class FSK2001000 extends FSK {
 
 	// Find the frequency of a FSK200/1000 symbol
 	// Currently the program only supports a sampling rate of 8000 KHz
-	private int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
+	protected int fsk2001000Freq (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		// 8 KHz sampling
 		if (waveData.getSampleRate()==8000.0)	{
 			int freq=doFSK200500_8000FFT(circBuf,waveData,pos,(int)samplesPerSymbol);
@@ -206,7 +206,7 @@ public class FSK2001000 extends FSK {
 	// The "normal" way of determining the frequency of a FSK200/1000 symbol
 	// is to do two FFTs of the first and last halves of the symbol
 	// that allows us to use the data for the early/late gate and to detect a half bit (which is used as a stop bit)
-	private boolean fsk2001000FreqHalf (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
+	protected boolean fsk2001000FreqHalf (CircularDataBuffer circBuf,WaveData waveData,int pos)	{
 		boolean out;
 		int sp=(int)samplesPerSymbol/2;
 		// First half
@@ -239,14 +239,14 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Add a comparator output to a circular buffer of values
-	private void addToAdjBuffer (double in)	{
+	protected void addToAdjBuffer (double in)	{
 		adjBuffer[adjCounter]=in;
 		adjCounter++;
 		if (adjCounter==adjBuffer.length) adjCounter=0;
 	}
 
 	// Return the average of the circular buffer
-	private double adjAverage()	{
+	protected double adjAverage()	{
 		int a;
 		double total=0.0;
 		for (a=0;a<adjBuffer.length;a++)	{
@@ -256,7 +256,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Get the average value and return an adjustment value
-	private int adjAdjust()	{
+	protected int adjAdjust()	{
 		double av=adjAverage();
 		double r=Math.abs(av)/10;
 		if (av<0) r=0-r;
@@ -270,7 +270,7 @@ public class FSK2001000 extends FSK {
 		}
 
 	// Compare a String with the known FSK200/1000 block header
-	private int compareSync (String comp)	{
+	protected int compareSync (String comp)	{
 		// Inverse sync 0x82ED4F19
 		final String INVSYNC="10000010111011010100111100011001";
 		// Sync 0x7D12B0E6
@@ -332,7 +332,11 @@ public class FSK2001000 extends FSK {
 		if (frameIndex % 16 == 0) {
 			int frameCount = (data[0] << 3) | (data[1] >> 5);
 			int messageCount = data[1] & 0x1f;
-			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s)", frameIndex, frameCount, messageCount), Color.BLUE, theApp.boldFont);
+			if (messageCount > 7) isValid = false; //There cannot be more than 7 messages in F06
+			theApp.writeLine(String.format("[#%d] [INFO] %d blocks, %d message(s) | CRC %s", frameIndex, frameCount, messageCount, isValid ? "OK" : "ERROR"), isValid ? Color.BLUE : Color.RED, theApp.boldFont);
+			if (isValid){
+				theApp.writeLine(String.format("[INFO] %s", processMetadataBlock(data)), Color.BLUE, theApp.boldFont);
+			} 
 			return;
 		}
 
@@ -356,9 +360,12 @@ public class FSK2001000 extends FSK {
 		if (frameIndex == 1 && data[0] == 0x34 && data[1] == 0x36) {
 			// Check whether this is a pre-transmission test.
 			txType = 1;
-		} else if (frameIndex == 1 && data[0] == 0x00 && data[1] == 0x00) {
+		} else if ((frameIndex == 1 && data[0] == 0x00 && data[1] == 0x00) || (frameIndex > 1 && (frameIndex % 16 != 0) && isValid && checkF06aBlock(digits))) {
 			// Check whether this is F06a.
-			txType = 2;
+			theApp.writeLine(String.format("[INFO] F06a block detected. Switching to F06a decoding..."), Color.BLUE, theApp.boldFont);
+			theApp.setSystem(12);
+			theApp.setModeLabel(theApp.MODENAMES[12]);
+			return;
 		} else if (frameIndex == 1 && data[0] == 0x1b) {
 			txType = 0;
 		}
@@ -367,8 +374,6 @@ public class FSK2001000 extends FSK {
 			theApp.writeLine(String.format("[#%d] %03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%03d%d%d | CRC %s", frameIndex, digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7], digits[8], digits[9], digits[10], digits[11], digits[12], digits[13], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
 		} else if (txType == 1) {
 			theApp.writeLine(String.format("[#%d] %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
-		} else if (txType == 2) {
-			theApp.writeLine(String.format("[#%d] %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x | CRC %s", frameIndex, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15], isValid ? "OK" : "ERROR"), isValid ? Color.BLACK : Color.RED, theApp.boldFont);
 		}
 
 		bitCount=0;
@@ -377,7 +382,7 @@ public class FSK2001000 extends FSK {
 	}
 
 	// Check if this is a divider block
-	private boolean checkDividerBlock(int da[])	{
+	protected boolean checkDividerBlock(int da[])	{
 		int a,zeroCount=0;
 		for (a=5;a<da.length;a++)	{
 			if (da[a]==0) zeroCount++;
@@ -385,4 +390,37 @@ public class FSK2001000 extends FSK {
 		if (zeroCount>=30) return true;
 		else return false;
 	}
+
+	//Check for invalid 10-bit and 8-bit digit values from valid CRC blocks
+	private boolean checkF06aBlock(int di[]) {
+		boolean invalidDigits=false;
+		for (int i=0;i<di.length;i++){
+			if (i<12 && di[i]>999) invalidDigits=true;
+			else if (i>11 && di[i]>9) invalidDigits=true;
+		}
+		return invalidDigits;
+	}
+
+	//Returns a list of blocks where a message start is.
+	private String processMetadataBlock(int da[]){
+		int positions[]= new int[8];
+		positions[0] = (da[2] << 3) | (da[3] >> 5);
+		positions[1] = (da[4] << 3) | (da[5] >> 5);
+		positions[2] = (da[6] << 3) | (da[7] >> 5);
+		positions[3] = (da[8] << 3) | (da[9] >> 5);
+		positions[4] = (da[10] << 3) | (da[11] >> 5);
+		positions[5] = (da[12] << 3) | (da[13] >> 5);
+		positions[6] = (da[14] << 3) | (da[15] >> 5);
+		
+		String msgList ="";
+		int index=0;
+		while (positions[index] != 0 && index < 8){
+			if (positions[index] != 0){
+				if (index != 0) msgList += ", ";
+				msgList += String.format("Message %d at block #%d", index+1, positions[index]);
+			}
+			index++;
+		}
+		return msgList;
+	} 
 }

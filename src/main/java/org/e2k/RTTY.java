@@ -176,11 +176,10 @@ public class RTTY extends FSK {
 						}
 						// CR
 						else if (ch.equals(getBAUDOT_LETTERS(8)))	{
-							characterCount=0;
-							theApp.newLineWrite(); 
+							characterCount=0; 
 						}
 						else	{
-							theApp.writeChar(ch,Color.BLACK,theApp.boldFont);
+							theApp.writeChar(ch,Color.BLACK,theApp.boldMonospaceFont);
 							characterCount++;
 						}
 					}

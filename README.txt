@@ -1,15 +1,16 @@
 Rivet is a free open source decoder of various HF data modes which interest members 
 of the Enigma 2000 group.
 
-http://groups.yahoo.com/group/enigma2000/
+Webpage: http://www.signalshed.com
+E-mail: enigma2000@gaggle.email
 
 and the UDXF group ..
 
-http://www.udxf.nl/
+https://groups.io/g/UDXF
 
 A binary version of this program which will run without being compiled is available from ..
 
-http://apul64.dsl.pipex.com/enigma2000/rivet/
+http://www.signalshed.com/rivet/
 
 Currently the program decodes the modes ..
 
@@ -29,16 +30,16 @@ but more modes will be added soon. The program can decode directly from your PCs
 Rivet is written in Java so it should run on any PC which has Java installed.
 If you haven't got Java then you can download it for free from ..
 
-http://www.java.com
+https://www.java.com
 
 This program uses the excellent JTransforms library ..
 
-http://sites.google.com/site/piotrwendykier/software/jtransforms
+https://github.com/wendykierp/JTransforms
 
 The main problem users have reported when trying to run Rivet under MS Windows is that a program other than Java has taken
 ownership of the .JAR extension. If you have this problem try running this program ..
 
-http://johann.loefflmann.net/en/software/jarfix/index.html
+https://johann.loefflmann.net/en/software/jarfix/index.html
 
 (Thanks to Mario for that)
 
@@ -164,6 +165,12 @@ Build 89 Improve the decoded CROWD36 display and add a debug output
          Add 150 baud support for RTTY and raw FSK
 Build 90 Rewrite the FSK200/1000 block parser to use the newest findings
          Fix the XPA2 decoder being unreliable after a while
+Build 91 Add selectable F06a decoding in two different formats (ASCII and binary)
+         Improve F06a detection when using FSK200/1000
+         Improve FSK200/1000 metadata block displays
+         Minor fixes and display changes in FSK200/500, XPA, XPA2, Baudot
+         Add and update some links
+         Gradle wrapper update to 7.5
                 
 Reported Bugs
 -------------
@@ -172,4 +179,4 @@ Still problems with ..
 CWOWD36 - Lack a fundamental understanding of this mode. Suspect a unknown tone to alphabet map is in use.
 
 CIS36-50 - Messages are OK from stations that start transmitting idle briefly but Rivet has problems with 
-messages from stations which idle constantly.
+messages from stations which idle constantly.
